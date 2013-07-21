@@ -45,9 +45,7 @@ class Background(Drawable):
     def draw(self, drawer):
         for star in self.stars:
             if not drawer.draw_star(star):
-                #print star.position
                 star.reset(drawer.camera)
-                #print star.position
 
 class World:
     def __init__(self, screen_size):
