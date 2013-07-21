@@ -102,7 +102,7 @@ while True:
 #        if planet.position[1] > SCREEN_SIZE[1]:
 #            planet.reset()
 
-    camera.move(0, 4)
+    camera.move(0, 10)
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
