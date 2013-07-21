@@ -13,15 +13,18 @@ class Gradient:
         if ratio >= 0 and ratio <= 1:
             i = 0
             while self.color_list[i][0] < ratio:
-                i +=1
+                i += 1
             if self.color_list[i][0] == ratio:
                 return self.color_list[i][1:]
+            # self.color_list[i - 1][0] < ratio < self.color_list[i][0]
             else:
-                length = float(self.color_list[i - 1][0] - self.color_list[i][0])
-                pos = float(ratio - self.color_list[i][0])
-                r = int((self.color_list[i][1] * pos / length + self.color_list[i - 1][1] * (1 - pos / length)) / 2)
-                g = int((self.color_list[i][2] * pos / length + self.color_list[i - 1][2] * (1 - pos / length)) / 2)
-                b = int((self.color_list[i][3] * pos / length + self.color_list[i - 1][3] * (1 - pos / length)) / 2)
+                length = float(self.color_list[i][0] - self.color_list[i - 1][0])
+                #print length
+                pos = float(ratio - self.color_list[i - 1][0])
+                ratio2 = pos / length
+                r = int((self.color_list[i - 1][1] * (1 - ratio2) + self.color_list[i][1] * ratio2))
+                g = int((self.color_list[i - 1][2] * (1 - ratio2) + self.color_list[i][2] * ratio2))
+                b = int((self.color_list[i - 1][3] * (1 - ratio2) + self.color_list[i][3] * ratio2))
                 return (r, g, b)
 
 class Drawable:
@@ -47,7 +50,8 @@ class Star(Mutable):
     def __init__(self, x, y, z, star_gradient):
         Drawable.__init__(self, x, y)
         self.position.append(z)
-        self.color = star_gradient.get_color_at(z / 101.0)
+        self.color = star_gradient.get_color_at(1 - (z + 15.0) / (102.0 + 15.0))
+        #print z, self.color
 
     def draw(self, drawer):
         drawer.draw_star(self)
@@ -59,16 +63,19 @@ class Star(Mutable):
 
 class Background(Drawable):
     def __init__(self, screen_size):
-        star_gradient = Gradient([(0, 0, 0, 0), (0.4, 32, 32, 128), (1, 255, 255, 255)])
+        self.star_gradient = Gradient([(0, 0, 0, 0), (0.4, 16, 16, 96), (1, 255, 255, 255)])
         self.stars = []
-        for z in xrange(1, 102):
-            for i in range(z**2 / 100):
-                self.stars.append(Star((random.random() - 0.5) * z * screen_size[0], (random.random() - 0.5) * z * screen_size[1], z, star_gradient))
+        for z in xrange(102, 0, -1):
+            for i in range(z**2 / 100 + 1):
+                self.stars.append(Star((random.random() - 0.5) * z * screen_size[0], (random.random() - 0.5) * z * screen_size[1], z, self.star_gradient))
 
     def draw(self, drawer):
         for star in self.stars:
             if not drawer.draw_star(star):
                 star.reset(drawer.camera)
+        for x in xrange(0, 101):
+            color = self.star_gradient.get_color_at(x / 100.0)
+            pygame.draw.line(drawer.surface, pygame.Color(color[0], color[1], color[2]), (x, 0), (x, 20), 1)
 
 class World:
     def __init__(self, screen_size):

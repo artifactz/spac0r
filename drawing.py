@@ -27,9 +27,10 @@ class Drawer:
 
     def draw_star(self, star):
         (x, y, z) = tuple(star.position)
-        #c = 255 - int(z / 101.0 * 255.0)
         x = (x - self.camera.position[0]) / float(z) + self.camera.half_screen_size[0]
         y = (y - self.camera.position[1]) / float(z) + self.camera.half_screen_size[1]
+        #if z == 1:
+        #    print (x, y, z), star.color
         if x >= 0 and x < self.camera.screen_size[0] and y >= 0 and y < self.camera.screen_size[1]:
             #pygame.draw.line(self.surface, pygame.Color(c, c, c), (x, y), (x, y), 1)
             pygame.draw.line(self.surface, pygame.Color(star.color[0], star.color[1], star.color[2]), (x, y), (x, y), 1)
