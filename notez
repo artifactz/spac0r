@@ -1,0 +1,50 @@
+**************
+**  Spac0r  **
+**************
+
+world: teh space
+- starz & planetz:
+    * realistic distribution:
+        + milky wayz
+        + galaxies
+        + s0lar systemz
+
+- spacecraftz:
+    * typez:
+        + hunterz
+        + bigga onez
+        + fatboyz
+        + mutha shipz producing other shipz
+    * consisting of:
+        + chassis
+        + gadgetz:
+            ~ blink0rz
+            ~ antenn0rz
+            ~ ...
+        + weaponz
+        + shieldz
+
+drawable
+- position
+- draw()
+
+mutable (drawable)
+- process()
+
+movable (mutable)
+- speed
+
+star (mutable)
+- z
+
+FOREGROUND                          BACKGROUND
+entity                              planet
+- position                          - type
+- speed
+- draw()
+
+particle
+
+COLLISIONZ:
+- vector graphix -> shapez: linez, circlez, rectz
+- shotz: linez
