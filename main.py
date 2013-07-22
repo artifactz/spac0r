@@ -68,14 +68,17 @@ pygame.init()
 pygame.display.set_caption('Spac0r')
 fps_clock = pygame.time.Clock()
 surf_display = pygame.display.set_mode(SCREEN_SIZE)
+surf_fps = None
 #surf_planet1 = pygame.image.load('img/planet1.png')
 w = world.World(SCREEN_SIZE)
 camera = drawing.Camera(SCREEN_SIZE, 0.0, 0.0)
 drawer = drawing.Drawer(surf_display, camera)
 #lighter = lightning.Lightning()
 
+font_sans = pygame.font.Font('freesansbold.ttf', 13)
 col_black = pygame.Color(0, 0, 0)
 col_white = pygame.Color(255, 255, 255)
+col_red   = pygame.Color(255, 0, 0)
 
 #stars = []
 #for x in xrange(0, 1000):
@@ -101,6 +104,9 @@ while True:
 #        planet.position[1] += planet.speed
 #        if planet.position[1] > SCREEN_SIZE[1]:
 #            planet.reset()
+
+    surf_fps = font_sans.render('%.1f' % fps_clock.get_fps(), False, col_red)
+    surf_display.blit(surf_fps, (1, -2))
 
     camera.move(0, 10)
     for event in pygame.event.get():

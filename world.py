@@ -65,17 +65,16 @@ class Background(Drawable):
     def __init__(self, screen_size):
         self.star_gradient = Gradient([(0, 0, 0, 0), (0.4, 16, 16, 96), (1, 255, 255, 255)])
         self.stars = []
-        for z in xrange(102, 0, -1):
+        for z in xrange(102, 10, -1):
             for i in range(z**2 / 100 + 1):
                 self.stars.append(Star((random.random() - 0.5) * z * screen_size[0], (random.random() - 0.5) * z * screen_size[1], z, self.star_gradient))
 
     def draw(self, drawer):
+        pix = pygame.PixelArray(drawer.surface)
         for star in self.stars:
-            if not drawer.draw_star(star):
+            if not drawer.draw_star(star, pix):
                 star.reset(drawer.camera)
-        for x in xrange(0, 101):
-            color = self.star_gradient.get_color_at(x / 100.0)
-            pygame.draw.line(drawer.surface, pygame.Color(color[0], color[1], color[2]), (x, 0), (x, 20), 1)
+        del pix
 
 class World:
     def __init__(self, screen_size):
