@@ -19,7 +19,6 @@ class Gradient:
             # self.color_list[i - 1][0] < ratio < self.color_list[i][0]
             else:
                 length = float(self.color_list[i][0] - self.color_list[i - 1][0])
-                #print length
                 pos = float(ratio - self.color_list[i - 1][0])
                 ratio2 = pos / length
                 r = int((self.color_list[i - 1][1] * (1 - ratio2) + self.color_list[i][1] * ratio2))
@@ -28,17 +27,15 @@ class Gradient:
                 return (r, g, b)
 
 class Drawable:
-    def __init__(self, x, y):
+    def __init__(self, x, y, rotation = 0.0):
         self.position = [x, y]
-
-    def draw(self, drawer):
-        pass
+        self.rotation = rotation
 
 class Mutable(Drawable):
     def __init__(self, x, y):
         Drawable.__init__(self, x, y)
 
-    def process(self):
+    def process(self): # probably will get something like a timespan since last frame, too
         pass
 
 class Movable(Mutable):
@@ -51,15 +48,37 @@ class Star(Mutable):
         Drawable.__init__(self, x, y)
         self.position.append(z)
         self.color = star_gradient.get_color_at(1 - (z + 15.0) / (102.0 + 15.0))
-        #print z, self.color
-
-    def draw(self, drawer):
-        drawer.draw_star(self)
 
     def reset(self, camera):
         v = (camera.position[0] - self.position[0], camera.position[1] - self.position[1])
         self.position[0] += v[0] * 2
         self.position[1] += v[1] * 2
+
+class Stats:
+    def __init__(self, hit_points = 0, hit_heal = 0, attack = 0, shield_points = 0, shield_heal = 0):
+        self.hit_points = float(hit_points)
+        self.hit_heal = float(hit_heal)
+        self.attack = float(attack)
+        self.shield_points = float(shield_points)
+        self.shield_heal = float(shield_heal)
+
+class Part(Mutable):
+    def __init__(self, stats, look):
+        self.stats = stats
+        self.look = look
+
+    def process(self):
+        pass
+
+class Spacecraft(Mutable):
+    def __init__(self, parts_list):
+        '''parts_list: (part, phi, r, rotation)'''
+        self.parts = [part for (part, phi, r, rotation) in parts_list]
+        self.draw_hints = [(phi, r, rotation) for (part, phi, r, rotation) in parts_list]
+
+    def process(self):
+        for part in self.parts:
+            part.process()
 
 class Background(Drawable):
     def __init__(self, screen_size):
@@ -69,14 +88,9 @@ class Background(Drawable):
             for i in range(z**2 / 100 + 1):
                 self.stars.append(Star((random.random() - 0.5) * z * screen_size[0], (random.random() - 0.5) * z * screen_size[1], z, self.star_gradient))
 
-    def draw(self, drawer):
-        pix = pygame.PixelArray(drawer.surface)
-        for star in self.stars:
-            if not drawer.draw_star(star, pix):
-                star.reset(drawer.camera)
-        del pix
-
 class World:
     def __init__(self, screen_size):
         self.background = Background(screen_size)
-        self.drawable = [self.background]
+        # parts
+        chassis_one = Part(Stats(hit_points = 100, hit_heal = 1, attack = 0), 'Chassis One')
+        player = Spacecraft([(chassis_one, 0, 0, 0)])

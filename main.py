@@ -75,11 +75,6 @@ camera = drawing.Camera(SCREEN_SIZE, 0.0, 0.0)
 drawer = drawing.Drawer(surf_display, camera)
 #lighter = lightning.Lightning()
 
-font_sans = pygame.font.Font('freesansbold.ttf', 13)
-col_black = pygame.Color(0, 0, 0)
-col_white = pygame.Color(255, 255, 255)
-col_red   = pygame.Color(255, 0, 0)
-
 #stars = []
 #for x in xrange(0, 1000):
 #    stars.append(Star())
@@ -88,10 +83,9 @@ col_red   = pygame.Color(255, 0, 0)
 #planets.append(Planet())
 
 while True:
-    surf_display.fill(col_black)
+    surf_display.fill(drawer.col_black)
 
-    for drawable in w.drawable:
-        drawable.draw(drawer)
+    drawer.draw_background(w.background)
 
 #    for star in stars:
 #        star.draw(surf_display)
@@ -105,7 +99,7 @@ while True:
 #        if planet.position[1] > SCREEN_SIZE[1]:
 #            planet.reset()
 
-    surf_fps = font_sans.render('%.1f' % fps_clock.get_fps(), False, col_red)
+    surf_fps = drawer.font_sans.render('%.1f' % fps_clock.get_fps(), False, drawer.col_red)
     surf_display.blit(surf_fps, (1, -2))
 
     camera.move(0, 10)

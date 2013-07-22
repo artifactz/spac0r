@@ -5,7 +5,7 @@ import random
 import numpy
 import math
 import copy
-import heapq
+import world
 
 class Camera:
     def __init__(self, screen_size, x, y):
@@ -24,6 +24,10 @@ class Drawer:
     def __init__(self, surface, camera):
         self.camera = camera
         self.surface = surface
+        self.font_sans = pygame.font.Font('freesansbold.ttf', 13)
+        self.col_black = pygame.Color(0, 0, 0)
+        self.col_white = pygame.Color(255, 255, 255)
+        self.col_red   = pygame.Color(255, 0, 0)
 
     def draw_star(self, star, pix):
         (x, y, z) = tuple(star.position)
@@ -35,3 +39,20 @@ class Drawer:
             return True
         else:
             return False
+
+    def draw_background(self, background):
+        pix = pygame.PixelArray(self.surface)
+        for star in background.stars:
+            if not self.draw_star(star, pix):
+                star.reset(self.camera)
+        del pix
+
+    def draw_part(self, part, dx, dy, rotation):
+        if part.look == 'Chassis One':
+            pygame.draw.lines(self.surface, )
+
+    def draw_spacecraft(self, spacecraft):
+        for i in xrange(0, len(spacecraft.parts)):
+            dx = spacecraft.position[0] + numpy.cos(spacecraft.draw_hints[i][0] + spacecraft.rotation) * spacecraft.draw_hints[i][1]
+            dy = spacecraft.position[1] + numpy.sin(spacecraft.draw_hints[i][0] + spacecraft.rotation) * spacecraft.draw_hints[i][1]
+            self.draw_part(spacecraft.parts(i), dx, dy, spacecraft.rotation + spacecraft.draw_hints[i][2])
