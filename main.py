@@ -3,9 +3,9 @@
 import pygame
 from pygame.locals import *
 import random
-import numpy
 import math
 import time
+import copy
 import lightning
 import world
 import drawing
@@ -75,23 +75,33 @@ camera = drawing.Camera(SCREEN_SIZE, 0.0, 0.0)
 drawer = drawing.Drawer(surf_display, camera)
 #lighter = lightning.Lightning()
 
-#stars = []
-#for x in xrange(0, 1000):
-#    stars.append(Star())
+mouse_pos = (SCREEN_SIZE[0] / 2, SCREEN_SIZE[1] / 2)
+key_pressed = [False for x in xrange(0, 512)]
 
 #planets = []
 #planets.append(Planet())
 
 while True:
+    # calculate camera position and player rotation from mouse position
+    v = [mouse_pos[0] - SCREEN_SIZE[0] / 2.0, mouse_pos[1] - SCREEN_SIZE[1] / 2.0]
+    drawer.camera.position[0] = w.player.position[0] + v[0] * 0.9
+    drawer.camera.position[1] = w.player.position[1] + v[1] * 0.9
+    w.player.rotation = math.atan2(-v[1], v[0])
+
     surf_display.fill(drawer.col_black)
 
     drawer.draw_background(w.background)
 
-#    for star in stars:
-#        star.draw(surf_display)
-#        star.position[1] += star.speed
-#        if star.position[1] > SCREEN_SIZE[1]:
-#            star.reset()
+    drawer.draw_spacecraft(w.player)
+
+    if key_pressed[K_w]:
+        w.player.speed[0] += math.cos(w.player.rotation)
+        w.player.speed[1] -= math.sin(w.player.rotation)
+
+    if key_pressed[K_s]:
+        w = world.World(SCREEN_SIZE)
+
+    w.player.process()
 
 #    for planet in planets:
 #        planet.draw(surf_display)
@@ -102,20 +112,16 @@ while True:
     surf_fps = drawer.font_sans.render('%.1f' % fps_clock.get_fps(), False, drawer.col_red)
     surf_display.blit(surf_fps, (1, -2))
 
-    camera.move(0, 10)
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             exit(0)
         if event.type == KEYDOWN:
-            if event.key == K_LEFT:
-                camera.move(-2, 0)
-            if event.key == K_RIGHT:
-                camera.move(2, 0)
-            if event.key == K_UP:
-                camera.move(0, -2)
-            if event.key == K_DOWN:
-                camera.move(0, 2)
+            key_pressed[event.key] = True
+        if event.type == KEYUP:
+            key_pressed[event.key] = False
+        if event.type == MOUSEMOTION:
+            mouse_pos = copy.deepcopy(event.pos)
 
     pygame.display.update()
-    fps_clock.tick(50)
+    fps_clock.tick(500)

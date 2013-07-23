@@ -2,7 +2,6 @@
 
 import pygame
 import random
-import numpy
 import math
 import copy
 import world
@@ -28,6 +27,7 @@ class Drawer:
         self.col_black = pygame.Color(0, 0, 0)
         self.col_white = pygame.Color(255, 255, 255)
         self.col_red   = pygame.Color(255, 0, 0)
+        self.col_green = pygame.Color(0, 255, 0)
 
     def draw_star(self, star, pix):
         (x, y, z) = tuple(star.position)
@@ -49,10 +49,25 @@ class Drawer:
 
     def draw_part(self, part, dx, dy, rotation):
         if part.look == 'Chassis One':
-            pygame.draw.lines(self.surface, )
+            self.draw_transformed_line(self.col_green, (10, 0), (-10, 10), dx, dy, rotation)
+            self.draw_transformed_line(self.col_green, (-10, 10), (-10, -10), dx, dy, rotation)
+            self.draw_transformed_line(self.col_green, (-10, -10), (10, 0), dx, dy, rotation)
+        if part.look == 'Laser One':
+            self.draw_transformed_line(self.col_green, (-3, 0), (3, 0), dx, dy, rotation)
+
+    def draw_transformed_line(self, color, (x1, y1), (x2, y2), dx, dy, rotation):
+        '''applies rotation, then translation, then draws the line.'''
+        cos = math.cos(rotation)
+        sin = math.sin(rotation)
+        pygame.draw.aaline(self.surface, color, (cos * x1 + sin * y1 + dx, cos * y1 - sin * x1 + dy), (cos * x2 + sin * y2 + dx, cos * y2 - sin * x2 + dy))
 
     def draw_spacecraft(self, spacecraft):
+        cos = math.cos(spacecraft.rotation)
+        sin = math.sin(spacecraft.rotation)
+        off = self.camera.get_offset()
         for i in xrange(0, len(spacecraft.parts)):
-            dx = spacecraft.position[0] + numpy.cos(spacecraft.draw_hints[i][0] + spacecraft.rotation) * spacecraft.draw_hints[i][1]
-            dy = spacecraft.position[1] + numpy.sin(spacecraft.draw_hints[i][0] + spacecraft.rotation) * spacecraft.draw_hints[i][1]
-            self.draw_part(spacecraft.parts(i), dx, dy, spacecraft.rotation + spacecraft.draw_hints[i][2])
+            #dx = spacecraft.position[0] + math.cos(spacecraft.draw_hints[i][0] + spacecraft.rotation) * spacecraft.draw_hints[i][1]
+            #dy = spacecraft.position[1] + math.sin(spacecraft.draw_hints[i][0] + spacecraft.rotation) * spacecraft.draw_hints[i][1]
+            dx = off[0] + spacecraft.position[0] + cos * spacecraft.parts[i].position[0] + sin * spacecraft.parts[i].position[1]
+            dy = off[1] + spacecraft.position[1] + cos * spacecraft.parts[i].position[1] - sin * spacecraft.parts[i].position[0]
+            self.draw_part(spacecraft.parts[i], dx, dy, spacecraft.rotation + spacecraft.parts[i].rotation)

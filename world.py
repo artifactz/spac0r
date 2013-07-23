@@ -32,20 +32,24 @@ class Drawable:
         self.rotation = rotation
 
 class Mutable(Drawable):
-    def __init__(self, x, y):
-        Drawable.__init__(self, x, y)
+    def __init__(self, x, y, rotation = 0.0):
+        Drawable.__init__(self, x, y, rotation)
 
     def process(self): # probably will get something like a timespan since last frame, too
         pass
 
 class Movable(Mutable):
-    def __init__(self, x, y):
-        Mutable.__init__(self, x, y)
+    def __init__(self, x, y, rotation = 0.0):
+        Mutable.__init__(self, x, y, rotation)
         self.speed = [0.0, 0.0]
+
+    def process(self):
+        self.position[0] += self.speed[0]
+        self.position[1] += self.speed[1]
 
 class Star(Mutable):
     def __init__(self, x, y, z, star_gradient):
-        Drawable.__init__(self, x, y)
+        Mutable.__init__(self, x, y)
         self.position.append(z)
         self.color = star_gradient.get_color_at(1 - (z + 15.0) / (102.0 + 15.0))
 
@@ -53,6 +57,14 @@ class Star(Mutable):
         v = (camera.position[0] - self.position[0], camera.position[1] - self.position[1])
         self.position[0] += v[0] * 2
         self.position[1] += v[1] * 2
+
+class Collidable(Movable):
+    def __init__(self, x, y, rotation = 0.0):
+        Movable.__init__(self, x, y, rotation)
+
+class Shot(Collidable):
+    def __init__(self, x, y, rotation = 0.0):
+        Collidable.__init__(self, x, y, rotation)
 
 class Stats:
     def __init__(self, hit_points = 0, hit_heal = 0, attack = 0, shield_points = 0, shield_heal = 0):
@@ -63,20 +75,21 @@ class Stats:
         self.shield_heal = float(shield_heal)
 
 class Part(Mutable):
-    def __init__(self, stats, look):
+    def __init__(self, stats, look, x, y, rotation = 0.0):
+        Mutable.__init__(self, x, y, rotation)
         self.stats = stats
         self.look = look
 
     def process(self):
         pass
 
-class Spacecraft(Mutable):
-    def __init__(self, parts_list):
-        '''parts_list: (part, phi, r, rotation)'''
-        self.parts = [part for (part, phi, r, rotation) in parts_list]
-        self.draw_hints = [(phi, r, rotation) for (part, phi, r, rotation) in parts_list]
+class Spacecraft(Movable):
+    def __init__(self, parts):
+        Movable.__init__(self, 0.0, 0.0)
+        self.parts = parts
 
     def process(self):
+        Movable.process(self)
         for part in self.parts:
             part.process()
 
@@ -92,5 +105,7 @@ class World:
     def __init__(self, screen_size):
         self.background = Background(screen_size)
         # parts
-        chassis_one = Part(Stats(hit_points = 100, hit_heal = 1, attack = 0), 'Chassis One')
-        player = Spacecraft([(chassis_one, 0, 0, 0)])
+        self.player = Spacecraft(
+            [Part(Stats(hit_points = 100, hit_heal = 1), 'Chassis One', 0, 0, 0),
+             Part(Stats(attack = 2.5), 'Laser One', 2, 6, 0),
+             Part(Stats(attack = 2.5), 'Laser One', 2, -6, 0)])
