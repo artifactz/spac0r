@@ -77,6 +77,7 @@ drawer = drawing.Drawer(surf_display, camera)
 
 mouse_pos = (SCREEN_SIZE[0] / 2, SCREEN_SIZE[1] / 2)
 key_pressed = [False for x in xrange(0, 512)]
+mouse_pressed = [False for x in xrange(0, 6)]
 
 #planets = []
 #planets.append(Planet())
@@ -94,6 +95,9 @@ while True:
 
     drawer.draw_spacecraft(w.player)
 
+    for shot in w.shots:
+        drawer.draw_shot(shot)
+
     if key_pressed[K_w]:
         w.player.speed[0] += math.cos(w.player.rotation)
         w.player.speed[1] -= math.sin(w.player.rotation)
@@ -101,7 +105,12 @@ while True:
     if key_pressed[K_s]:
         w = world.World(SCREEN_SIZE)
 
-    w.player.process()
+    if mouse_pressed[1]:
+        w.player.shoot(w)
+
+    for mutable in w.mutable:
+        #w.player.process()
+        mutable.process()
 
 #    for planet in planets:
 #        planet.draw(surf_display)
@@ -122,6 +131,10 @@ while True:
             key_pressed[event.key] = False
         if event.type == MOUSEMOTION:
             mouse_pos = copy.deepcopy(event.pos)
+        if event.type == MOUSEBUTTONDOWN:
+            mouse_pressed[event.button] = True
+        if event.type == MOUSEBUTTONUP:
+            mouse_pressed[event.button] = False
 
     pygame.display.update()
     fps_clock.tick(500)

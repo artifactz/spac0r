@@ -49,7 +49,4 @@ COLLISIONZ:
 - vector graphix -> shapez: linez, circlez, rectz
 - shotz: linez
 
-player will find parts with randomized stats (diablo)
-
-TODO:
-store part draw hints in drawable vars
+player will find parts with randomized stats (diablo style)
