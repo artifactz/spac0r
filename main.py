@@ -82,6 +82,8 @@ mouse_pressed = [False for x in xrange(0, 6)]
 #planets = []
 #planets.append(Planet())
 
+processing_tick = time.time()
+
 while True:
     # calculate camera position and player rotation from mouse position
     v = [mouse_pos[0] - SCREEN_SIZE[0] / 2.0, mouse_pos[1] - SCREEN_SIZE[1] / 2.0]
@@ -90,8 +92,11 @@ while True:
     w.player.rotation = math.atan2(-v[1], v[0])
 
     # processing
+    current_time = time.time()
+    timespan = current_time - processing_tick
+    processing_tick = current_time
     for mutable in w.mutable:
-        mutable.process()
+        mutable.process(timespan)
     #for spacecraft in w.spacecrafts:
     #    spacecraft.translate_shapes()
 
@@ -126,7 +131,7 @@ while True:
 #            planet.reset()
 
     for event in pygame.event.get():
-        if event.type == QUIT:
+        if event.type == QUIT or (event.type == KEYDOWN and event.key == K_q):
             pygame.quit()
             exit(0)
         if event.type == KEYDOWN:

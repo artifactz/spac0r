@@ -37,7 +37,7 @@ class Mutable(Drawable):
     def __init__(self, x, y, rotation = .0):
         Drawable.__init__(self, x, y, rotation)
 
-    def process(self): # probably will get something like a timespan since last frame, too
+    def process(self, timespan):
         pass
 
 class Movable(Mutable):
@@ -45,14 +45,16 @@ class Movable(Mutable):
         Mutable.__init__(self, x, y, rotation)
         self.speed = [sx, sy]
 
-    def process(self):
-        self.position[0] += self.speed[0]
-        self.position[1] += self.speed[1]
+    def process(self, timespan):
+        self.position[0] += self.speed[0] * timespan
+        self.position[1] += self.speed[1] * timespan
 
 class Star(Mutable):
     def __init__(self, x, y, z, star_gradient):
         Mutable.__init__(self, x, y)
         self.position.append(z)
+        # z 1 to 102 ~> 1 to .1
+        a = 103 - z
         self.color = star_gradient.get_color_at(1 - (z + 15.0) / (102.0 + 15.0))
 
     def reset(self, camera):
@@ -64,16 +66,16 @@ class Collidable(Movable):
     def __init__(self, x, y, rotation = .0, sx = .0, sy = .0):
         Movable.__init__(self, x, y, rotation, sx, sy)
 
-    def process(self):
-        Movable.process(self)
+    def process(self, timespan):
+        Movable.process(self, timespan)
 
 class Shot(Collidable):
     def __init__(self, attack, x, y, sx = .0, sy = .0):
         Collidable.__init__(self, x, y, .0, sx, sy)
         self.attack = attack
 
-    def process(self):
-        Collidable.process(self)
+    def process(self, timespan):
+        Collidable.process(self, timespan)
 
 class Stats:
     def __init__(self, hit_points_max = 0, hit_heal = 0, attack = 0, attack_cooldown_max = 0, attack_speed = 0, shield_points = 0, shield_heal = 0):
@@ -105,18 +107,19 @@ class Part(Mutable):
         self.stats = stats
         self.shapes = shapes
 
-    def process(self):
-        pass
+    def process(self, timespan):
+        if self.stats.attack_cooldown > 0:
+            self.stats.attack_cooldown = max(self.stats.attack_cooldown - timespan, 0)
 
 class Spacecraft(Movable):
     def __init__(self, parts):
         Movable.__init__(self, .0, .0)
         self.parts = parts
 
-    def process(self):
-        Movable.process(self)
+    def process(self, timespan):
+        Movable.process(self, timespan)
         for part in self.parts:
-            part.process()
+            part.process(timespan)
         self.translate_shapes()
 
     def translate_shapes(self):
@@ -134,7 +137,8 @@ class Spacecraft(Movable):
 
     def shoot(self, world):
         for weapon in filter(lambda x: x.stats.attack > 0 and x.stats.attack_cooldown <= 0, self.parts):
-            shot = Shot(weapon.stats.attack, self.position[0], self.position[1], math.cos(self.rotation) * weapon.stats.attack_speed, -math.sin(self.rotation) * weapon.stats.attack_speed)
+            shot = Shot(weapon.stats.attack, weapon.shapes[0].real_start[0], weapon.shapes[0].real_start[1], math.cos(self.rotation) * weapon.stats.attack_speed, -math.sin(self.rotation) * weapon.stats.attack_speed)
+            weapon.stats.attack_cooldown = weapon.stats.attack_cooldown_max
             #world.drawable.append(shot)
             world.mutable.append(shot)
             #world.collidable.append(shot)
@@ -162,13 +166,13 @@ class World:
 
         self.player = Spacecraft(
             [Part(Stats(hit_points_max = 100, hit_heal = 1), copy.deepcopy(chassis_one), 0, 0, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = .5), copy.deepcopy(laser_one), 2, 6, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = .5), copy.deepcopy(laser_one), 2, -6, 0)])
+             Part(Stats(attack = 2.5, attack_cooldown_max = .5, attack_speed = 200), copy.deepcopy(laser_one), 2, 6, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .5, attack_speed = 200), copy.deepcopy(laser_one), 2, -6, 0)])
 
         self.hostile = Spacecraft(
             [Part(Stats(hit_points_max = 100), copy.deepcopy(chassis_one), 0, 0, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = .5), copy.deepcopy(laser_one), 2, 6, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = .5), copy.deepcopy(laser_one), 2, -6, 0)])
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 50), copy.deepcopy(laser_one), 2, 6, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 50), copy.deepcopy(laser_one), 2, -6, 0)])
         self.hostile.position = [100.0, 10.0]
         self.hostile.rotation = 1.0
 

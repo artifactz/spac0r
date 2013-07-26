@@ -54,7 +54,7 @@ class Drawer:
 
     def draw_shot(self, shot):
         off = self.camera.get_offset()
-        self.draw_transformed_line(self.col_green, (0, 0), (shot.speed[0] * 100, shot.speed[1] * 100), shot.position[0] + off[0], shot.position[1] + off[1], 0)
+        self.draw_transformed_line(self.col_green, (0, 0), (shot.speed[0] / 20, shot.speed[1] / 20), shot.position[0] + off[0], shot.position[1] + off[1], 0)
 
     def draw_spacecraft(self, spacecraft):
         off = self.camera.get_offset()
