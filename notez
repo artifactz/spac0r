@@ -50,3 +50,16 @@ COLLISIONZ:
 - shotz: linez
 
 player will find parts with randomized stats (diablo style)
+
+drawing
+UI
+stars / background
+spacecrafts
+- parts
+shots
+items
+
+
+part:
+- lines
+- overwrite process() per prototype with diverse part processers

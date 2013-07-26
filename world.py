@@ -3,6 +3,7 @@
 import random
 import pygame
 import math
+import copy
 
 class Gradient:
     def __init__(self, color_list):
@@ -86,16 +87,26 @@ class Stats:
         self.shield_points = float(shield_points)
         self.shield_heal = float(shield_heal)
 
+class Shape:
+    def __init__(self, color):
+        self.color = color
+
+class Line(Shape):
+    def __init__(self, color, start, end):
+        Shape.__init__(self, color)
+        self.start = start
+        self.end = end
+        self.real_start = [.0, .0]
+        self.real_end = [.0, .0]
+
 class Part(Mutable):
-    def __init__(self, stats, look, x, y, rotation = .0):
+    def __init__(self, stats, shapes, x, y, rotation = .0):
         Mutable.__init__(self, x, y, rotation)
         self.stats = stats
-        self.look = look
+        self.shapes = shapes
 
     def process(self):
         pass
-
-
 
 class Spacecraft(Movable):
     def __init__(self, parts):
@@ -107,6 +118,19 @@ class Spacecraft(Movable):
         for part in self.parts:
             part.process()
 
+    def translate_shapes(self):
+        cos = math.cos(self.rotation)
+        sin = math.sin(self.rotation)
+        for i in xrange(0, len(self.parts)):
+            dx = self.position[0] + cos * self.parts[i].position[0] + sin * self.parts[i].position[1]
+            dy = self.position[1] + cos * self.parts[i].position[1] - sin * self.parts[i].position[0]
+            for shape in self.parts[i].shapes:
+                if isinstance(shape, Line):
+                    cos2 = math.cos(self.rotation + self.parts[i].rotation)
+                    sin2 = math.sin(self.rotation + self.parts[i].rotation)
+                    shape.real_start = (cos2 * shape.start[0] + sin2 * shape.start[1] + dx, cos2 * shape.start[1] - sin2 * shape.start[0] + dy)
+                    shape.real_end = (cos2 * shape.end[0] + sin2 * shape.end[1] + dx, cos2 * shape.end[1] - sin2 * shape.end[0] + dy)
+
     def shoot(self, world):
         for weapon in filter(lambda x: x.stats.attack > 0 and x.stats.attack_cooldown <= 0, self.parts):
             shot = Shot(weapon.stats.attack, self.position[0], self.position[1], math.cos(self.rotation) * weapon.stats.attack_speed, -math.sin(self.rotation) * weapon.stats.attack_speed)
@@ -114,8 +138,6 @@ class Spacecraft(Movable):
             world.mutable.append(shot)
             world.collidable.append(shot)
             world.shots.append(shot)
-            #w.gen_shot(weapon.stats.attack, w.player.position[0], w.player.position[1], 0.1, 0)
-
 
 class Background(Drawable):
     def __init__(self, screen_size):
@@ -127,12 +149,20 @@ class Background(Drawable):
 
 class World:
     def __init__(self, screen_size):
+        self.col_black = pygame.Color(0, 0, 0)
+        self.col_white = pygame.Color(255, 255, 255)
+        self.col_red   = pygame.Color(255, 0, 0)
+        self.col_green = pygame.Color(0, 255, 0)
+
         self.background = Background(screen_size)
-        # parts
+        # shapes
+        chassis_one = [Line(self.col_green, (10, 0), (-10, 10)), Line(self.col_green, (-10, 10), (-10, -10)), Line(self.col_green, (-10, -10), (10, 0))]
+        laser_one = [Line(self.col_green, (-3, 0), (3, 0))]
+
         self.player = Spacecraft(
-            [Part(Stats(hit_points_max = 100, hit_heal = 1), 'Chassis One', 0, 0, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = .5), 'Laser One', 2, 6, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = .5), 'Laser One', 2, -6, 0)])
+            [Part(Stats(hit_points_max = 100, hit_heal = 1), chassis_one, 0, 0, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = .5), laser_one, 2, 6, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = .5), copy.deepcopy(laser_one), 2, -6, 0)])
         self.drawable = [self.player]
         self.mutable = [self.player]
         self.collidable = [self.player]

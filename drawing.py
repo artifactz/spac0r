@@ -34,7 +34,6 @@ class Drawer:
         x = (x - self.camera.position[0]) / float(z) + self.camera.half_screen_size[0]
         y = (y - self.camera.position[1]) / float(z) + self.camera.half_screen_size[1]
         if x >= 0 and x < self.camera.screen_size[0] and y >= 0 and y < self.camera.screen_size[1]:
-            #pygame.draw.line(self.surface, pygame.Color(star.color[0], star.color[1], star.color[2]), (x, y), (x, y), 1)
             pix[int(x)][int(y)] = (star.color[0], star.color[1], star.color[2])
             return True
         else:
@@ -57,19 +56,10 @@ class Drawer:
         off = self.camera.get_offset()
         self.draw_transformed_line(self.col_green, (0, 0), (shot.speed[0] * 100, shot.speed[1] * 100), shot.position[0] + off[0], shot.position[1] + off[1], 0)
 
-    def draw_part(self, part, dx, dy, rotation):
-        if part.look == 'Chassis One':
-            self.draw_transformed_line(self.col_green, (10, 0), (-10, 10), dx, dy, rotation)
-            self.draw_transformed_line(self.col_green, (-10, 10), (-10, -10), dx, dy, rotation)
-            self.draw_transformed_line(self.col_green, (-10, -10), (10, 0), dx, dy, rotation)
-        if part.look == 'Laser One':
-            self.draw_transformed_line(self.col_green, (-3, 0), (3, 0), dx, dy, rotation)
-
     def draw_spacecraft(self, spacecraft):
-        cos = math.cos(spacecraft.rotation)
-        sin = math.sin(spacecraft.rotation)
         off = self.camera.get_offset()
-        for i in xrange(0, len(spacecraft.parts)):
-            dx = off[0] + spacecraft.position[0] + cos * spacecraft.parts[i].position[0] + sin * spacecraft.parts[i].position[1]
-            dy = off[1] + spacecraft.position[1] + cos * spacecraft.parts[i].position[1] - sin * spacecraft.parts[i].position[0]
-            self.draw_part(spacecraft.parts[i], dx, dy, spacecraft.rotation + spacecraft.parts[i].rotation)
+        for part in spacecraft.parts:
+            for shape in part.shapes:
+                if isinstance(shape, world.Line):
+                    pygame.draw.aaline(self.surface, shape.color,
+                        (shape.real_start[0] + off[0], shape.real_start[1] + off[1]), (shape.real_end[0] + off[0], shape.real_end[1] + off[1]))

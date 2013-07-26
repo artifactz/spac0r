@@ -92,7 +92,8 @@ while True:
     surf_display.fill(drawer.col_black)
 
     drawer.draw_background(w.background)
-
+    
+    w.player.translate_shapes()
     drawer.draw_spacecraft(w.player)
 
     for shot in w.shots:
@@ -109,7 +110,6 @@ while True:
         w.player.shoot(w)
 
     for mutable in w.mutable:
-        #w.player.process()
         mutable.process()
 
 #    for planet in planets:
