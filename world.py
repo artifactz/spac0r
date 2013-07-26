@@ -117,6 +117,7 @@ class Spacecraft(Movable):
         Movable.process(self)
         for part in self.parts:
             part.process()
+        self.translate_shapes()
 
     def translate_shapes(self):
         cos = math.cos(self.rotation)
@@ -134,9 +135,9 @@ class Spacecraft(Movable):
     def shoot(self, world):
         for weapon in filter(lambda x: x.stats.attack > 0 and x.stats.attack_cooldown <= 0, self.parts):
             shot = Shot(weapon.stats.attack, self.position[0], self.position[1], math.cos(self.rotation) * weapon.stats.attack_speed, -math.sin(self.rotation) * weapon.stats.attack_speed)
-            world.drawable.append(shot)
+            #world.drawable.append(shot)
             world.mutable.append(shot)
-            world.collidable.append(shot)
+            #world.collidable.append(shot)
             world.shots.append(shot)
 
 class Background(Drawable):
@@ -160,10 +161,17 @@ class World:
         laser_one = [Line(self.col_green, (-3, 0), (3, 0))]
 
         self.player = Spacecraft(
-            [Part(Stats(hit_points_max = 100, hit_heal = 1), chassis_one, 0, 0, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = .5), laser_one, 2, 6, 0),
+            [Part(Stats(hit_points_max = 100, hit_heal = 1), copy.deepcopy(chassis_one), 0, 0, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = .5), copy.deepcopy(laser_one), 2, 6, 0),
              Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = .5), copy.deepcopy(laser_one), 2, -6, 0)])
-        self.drawable = [self.player]
-        self.mutable = [self.player]
-        self.collidable = [self.player]
+
+        self.hostile = Spacecraft(
+            [Part(Stats(hit_points_max = 100), copy.deepcopy(chassis_one), 0, 0, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = .5), copy.deepcopy(laser_one), 2, 6, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = .5), copy.deepcopy(laser_one), 2, -6, 0)])
+        self.hostile.position = [100.0, 10.0]
+        self.hostile.rotation = 1.0
+
+        self.spacecrafts = [self.player, self.hostile]
+        self.mutable = [self.player, self.hostile]
         self.shots = []

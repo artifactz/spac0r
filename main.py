@@ -89,16 +89,26 @@ while True:
     drawer.camera.position[1] = w.player.position[1] + v[1] * 0.9
     w.player.rotation = math.atan2(-v[1], v[0])
 
+    # processing
+    for mutable in w.mutable:
+        mutable.process()
+    #for spacecraft in w.spacecrafts:
+    #    spacecraft.translate_shapes()
+
+    # drawing
     surf_display.fill(drawer.col_black)
-
     drawer.draw_background(w.background)
-    
-    w.player.translate_shapes()
-    drawer.draw_spacecraft(w.player)
 
+    for spacecraft in w.spacecrafts:
+        drawer.draw_spacecraft(spacecraft)
     for shot in w.shots:
         drawer.draw_shot(shot)
 
+    surf_fps = drawer.font_sans.render('%.1f' % fps_clock.get_fps(), False, drawer.col_red)
+    surf_display.blit(surf_fps, (1, -2))
+    pygame.display.update()
+
+    # events
     if key_pressed[K_w]:
         w.player.speed[0] += math.cos(w.player.rotation)
         w.player.speed[1] -= math.sin(w.player.rotation)
@@ -109,17 +119,11 @@ while True:
     if mouse_pressed[1]:
         w.player.shoot(w)
 
-    for mutable in w.mutable:
-        mutable.process()
-
 #    for planet in planets:
 #        planet.draw(surf_display)
 #        planet.position[1] += planet.speed
 #        if planet.position[1] > SCREEN_SIZE[1]:
 #            planet.reset()
-
-    surf_fps = drawer.font_sans.render('%.1f' % fps_clock.get_fps(), False, drawer.col_red)
-    surf_display.blit(surf_fps, (1, -2))
 
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -136,5 +140,4 @@ while True:
         if event.type == MOUSEBUTTONUP:
             mouse_pressed[event.button] = False
 
-    pygame.display.update()
     fps_clock.tick(500)

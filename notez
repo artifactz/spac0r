@@ -51,15 +51,15 @@ COLLISIONZ:
 
 player will find parts with randomized stats (diablo style)
 
-drawing
-UI
-stars / background
-spacecrafts
-- parts
-shots
-items
+ENTITIES            drawable mutable movable collidable
+UI                      x
+stars / background      x
+spacecrafts             x       x       x       x
+- parts                 x       x       x       x
+shots                   x       x       x       x
+items                   x                       x
 
 
 part:
-- lines
+- lines (circles)
 - overwrite process() per prototype with diverse part processers
