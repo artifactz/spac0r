@@ -30,6 +30,7 @@ class Drawer:
         self.col_green = pygame.Color(0, 255, 0)
 
     def draw_star(self, star, pix):
+        '''not used'''
         (x, y, z) = tuple(star.position)
         x = (x - self.camera.position[0]) / float(z) + self.camera.half_screen_size[0]
         y = (y - self.camera.position[1]) / float(z) + self.camera.half_screen_size[1]

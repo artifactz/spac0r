@@ -50,33 +50,27 @@ class Movable(Mutable):
         self.position[0] += self.speed[0] * timespan
         self.position[1] += self.speed[1] * timespan
 
-class Star(Mutable):
+class Star(Drawable):
     def __init__(self, x, y, z, star_gradient):
-        Mutable.__init__(self, x, y)
+        Drawable.__init__(self, x, y)
         self.position.append(z)
-        # z 1 to 102 ~> 1 to .1
-        a = (103 - z) / 102.0 + .05
-        self.color = star_gradient.get_color_at(a) #(1 - (z + 15.0) / (102.0 + 15.0))
+        a = (103 - z) / 104.0 + .1     # +.1 to make almost black stars a little lighter
+        self.color = star_gradient.get_color_at(a)
 
     def reset(self, camera):
         v = (camera.position[0] - self.position[0], camera.position[1] - self.position[1])
         self.position[0] += v[0] * 2
         self.position[1] += v[1] * 2
 
-class Collidable(Movable):
-    def __init__(self, x, y, rotation = .0, sx = .0, sy = .0):
-        Movable.__init__(self, x, y, rotation, sx, sy)
+class Collidable:
+    def __init__(self, shapes):
+        self.shapes = shapes
 
-    def process(self, timespan):
-        Movable.process(self, timespan)
-
-class Shot(Collidable):
+class Shot(Movable, Collidable):
     def __init__(self, attack, x, y, sx = .0, sy = .0):
-        Collidable.__init__(self, x, y, .0, sx, sy)
+        Movable.__init__(self, x, y, .0, sx, sy)
+        Collidable.__init__(self, [Line(None, (-2, 0), (2, 0))])
         self.attack = attack
-
-    def process(self, timespan):
-        Collidable.process(self, timespan)
 
 class Stats:
     def __init__(self, hit_points_max = 0, hit_heal = 0, attack = 0, attack_cooldown_max = 0, attack_speed = 0, shield_points = 0, shield_heal = 0):
@@ -102,11 +96,11 @@ class Line(Shape):
         self.real_start = [.0, .0]
         self.real_end = [.0, .0]
 
-class Part(Mutable):
+class Part(Drawable, Collidable):
     def __init__(self, stats, shapes, x, y, rotation = .0):
-        Mutable.__init__(self, x, y, rotation)
+        Drawable.__init__(self, x, y, rotation)
+        Collidable.__init__(self, shapes)
         self.stats = stats
-        self.shapes = shapes
 
     def process(self, timespan):
         if self.stats.attack_cooldown > 0:
