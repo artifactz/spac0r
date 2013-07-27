@@ -41,8 +41,41 @@ class Drawer:
 
     def draw_background(self, background):
         pix = pygame.PixelArray(self.surface)
+        w = len(pix)
+        h = len(pix[0])
         for star in background.stars:
-            if not self.draw_star(star, pix):
+            x = (star.position[0] - self.camera.position[0]) / float(star.position[2]) + self.camera.half_screen_size[0]
+            y = (star.position[1] - self.camera.position[1]) / float(star.position[2]) + self.camera.half_screen_size[1]
+            if x >= 0 and x < self.camera.screen_size[0] and y >= 0 and y < self.camera.screen_size[1]:
+                dx = x - math.floor(x)
+                dy = y - math.floor(y)
+                dx1 = (1 - dx)
+                dy1 = (1 - dy)
+                ix = int(math.floor(x))
+                iy = int(math.floor(y))
+                c0x1 = star.color[0] * dx1
+                c0y1 = star.color[0] * dy1
+                c1x1 = star.color[1] * dx1
+                c1y1 = star.color[1] * dy1
+                c2x1 = star.color[2] * dx1
+                c2y1 = star.color[2] * dy1
+                c0x0 = star.color[0] * dx
+                c0y0 = star.color[0] * dy
+                c1x0 = star.color[1] * dx
+                c1y0 = star.color[1] * dy
+                c2x0 = star.color[2] * dx
+                c2y0 = star.color[2] * dy
+                pix[ix][iy] = ((c0x1 + c0y1) / 2, (c1x1 + c1y1) / 2, (c2x1 + c2x1) / 2)
+                if ix + 1 < w:
+                    pix[ix + 1][iy] = ((c0x0 + c0y1) / 2, (c1x0 + c1y1) / 2, (c2x0 + c2x1) / 2)
+                else:
+                    continue
+                if iy + 1 < h:
+                    pix[ix][iy + 1] = ((c0x1 + c0y0) / 2, (c1x1 + c1y0) / 2, (c2x1 + c2y0) / 2)
+                else:
+                    continue
+                pix[ix + 1][iy + 1] = ((c0x0 + c0y0) / 2, (c1x0 + c1y0) / 2, (c2x0 + c2y0) / 2)
+            else:
                 star.reset(self.camera)
         del pix
 

@@ -34,6 +34,7 @@ class Drawable:
         self.rotation = rotation
 
 class Mutable(Drawable):
+    '''Just an aestetic class. Every subclass has to implement process() itself.'''
     def __init__(self, x, y, rotation = .0):
         Drawable.__init__(self, x, y, rotation)
 
@@ -54,8 +55,8 @@ class Star(Mutable):
         Mutable.__init__(self, x, y)
         self.position.append(z)
         # z 1 to 102 ~> 1 to .1
-        a = 103 - z
-        self.color = star_gradient.get_color_at(1 - (z + 15.0) / (102.0 + 15.0))
+        a = (103 - z) / 102.0 + .05
+        self.color = star_gradient.get_color_at(a) #(1 - (z + 15.0) / (102.0 + 15.0))
 
     def reset(self, camera):
         v = (camera.position[0] - self.position[0], camera.position[1] - self.position[1])
