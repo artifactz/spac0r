@@ -91,24 +91,37 @@ while True:
     drawer.camera.position[1] = w.player.position[1] + v[1] * 0.9
     w.player.rotation = math.atan2(-v[1], v[0])
 
+    # draw things that don't need to be processed further
+    surf_display.fill(drawer.col_black)
+    drawer.draw_background(w.background)
+
     # processing
     current_time = time.time()
     timespan = current_time - processing_tick
     processing_tick = current_time
     for mutable in w.mutable:
         mutable.process(timespan)
-    #for spacecraft in w.spacecrafts:
-    #    spacecraft.translate_shapes()
 
-    # drawing
-    surf_display.fill(drawer.col_black)
-    drawer.draw_background(w.background)
+    # collision detection
+    processed = []
+    for collidable1 in w.collidable:
+        processed.append(collidable1)
+        for collidable2 in w.collidable:
+            if not collidable2 in processed:
+                pos = world.collides(collidable1.shapes, collidable2.shapes)
+                if pos:
+                    #print collidable1, 'and', collidable2, 'collide at', pos
+                    off = drawer.camera.get_offset()
+                    pygame.draw.line(surf_display, drawer.col_red, (off[0] + pos[0], 0), (off[0] + pos[0], SCREEN_SIZE[1]))
+                    pygame.draw.line(surf_display, drawer.col_red, (0, off[1] + pos[1]), (SCREEN_SIZE[0], off[1] + pos[1]))
 
+    # draw processed things
     for spacecraft in w.spacecrafts:
         drawer.draw_spacecraft(spacecraft)
     for shot in w.shots:
         drawer.draw_shot(shot)
 
+    # render fps and update display
     surf_fps = drawer.font_sans.render('%.1f' % fps_clock.get_fps(), False, drawer.col_red)
     surf_display.blit(surf_fps, (1, -2))
     pygame.display.update()

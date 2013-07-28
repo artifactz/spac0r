@@ -106,10 +106,14 @@ class Part(Drawable, Collidable):
         if self.stats.attack_cooldown > 0:
             self.stats.attack_cooldown = max(self.stats.attack_cooldown - timespan, 0)
 
-class Spacecraft(Movable):
+class Spacecraft(Movable, Collidable):
     def __init__(self, parts):
         Movable.__init__(self, .0, .0)
         self.parts = parts
+        shapes = []
+        for part in self.parts:
+            shapes += part.shapes
+        Collidable.__init__(self, shapes)
 
     def process(self, timespan):
         Movable.process(self, timespan)
@@ -174,3 +178,30 @@ class World:
         self.spacecrafts = [self.player, self.hostile]
         self.mutable = [self.player, self.hostile]
         self.shots = []
+        self.collidable = [self.player, self.hostile]
+
+def collides(shapes1, shapes2):
+    '''Takes two shape sequences and checks if they overlap. Returns (x, y) if they do, else None.'''
+    for shape1 in shapes1:
+        if isinstance(shape1, Line):
+            line1 = shape1
+            for shape2 in shapes2:
+                if isinstance(shape2, Line):
+                    line2 = shape2
+                    # check if the two lines intersect
+                    x1 = line1.real_start[0]
+                    y1 = line1.real_start[1]
+                    x2 = line1.real_end[0]
+                    y2 = line1.real_end[1]
+                    x3 = line2.real_start[0]
+                    y3 = line2.real_start[1]
+                    x4 = line2.real_end[0]
+                    y4 = line2.real_end[1]
+                    # don't calculate the intersection point if the bounding boxes don't overlap
+                    if min(x1, x2) <= max(x3, x4) and min(x3, x4) <= max(x1, x2) and min(y1, y2) <= max(y3, y4) and min(y3, y4) <= max(y1, y2):
+                        denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+                        x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / denominator
+                        y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denominator
+                        # check if the intersection point is in the overlap box
+                        if x <= max(x1, x2, x3, x4) and x >= min(x1, x2, x3, x4) and y <= max(y1, y2, y3, y4) and y >= min(y1, y2, y3, y4):
+                            return x, y
