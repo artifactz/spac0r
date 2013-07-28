@@ -88,7 +88,11 @@ class Drawer:
 
     def draw_shot(self, shot):
         off = self.camera.get_offset()
-        self.draw_transformed_line(self.col_green, (0, 0), (shot.speed[0] / 20, shot.speed[1] / 20), shot.position[0] + off[0], shot.position[1] + off[1], 0)
+        col = pygame.Color(0, 255, 0, min(int(shot.ttl * 10.0), 255))
+        pygame.draw.line(self.surface, col,
+            (off[0] + shot.shapes[0].real_start[0], off[1] + shot.shapes[0].real_start[1]),
+            (off[0] + shot.shapes[0].real_end[0], off[1] + shot.shapes[0].real_end[1]))
+        #self.draw_transformed_line(col, (0, 0), (shot.speed[0] / 20, shot.speed[1] / 20), shot.position[0] + off[0], shot.position[1] + off[1], 0)
 
     def draw_spacecraft(self, spacecraft):
         off = self.camera.get_offset()

@@ -102,6 +102,10 @@ while True:
     for mutable in w.mutable:
         mutable.process(timespan)
 
+    # check if decayed
+    for decayable in w.decayable:
+        if decayable.ttl == 0:
+            w.remove_entity(decayable)
     # collision detection
     processed = []
     for collidable1 in w.collidable:

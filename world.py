@@ -66,14 +66,33 @@ class Collidable:
     def __init__(self, shapes):
         self.shapes = shapes
 
-class Shot(Movable, Collidable):
-    def __init__(self, attack, x, y, sx = .0, sy = .0):
+class Decayable:
+    def __init__(self, ttl):
+        self.ttl = ttl
+
+    def process(self, timespan):
+        self.ttl = max(self.ttl - timespan, 0)
+
+class Particle(Movable, Decayable):
+    def __init__(self, x, y, sx = .0, sy = .0):
+        Movable.__init__(self, x, y, .0, sx, sy)
+        Decayable.__init__(self, ttl)
+
+class Shot(Movable, Collidable, Decayable):
+    def __init__(self, attack, ttl, x, y, sx = .0, sy = .0):
         Movable.__init__(self, x, y, .0, sx, sy)
         Collidable.__init__(self, [Line(None, (-2, 0), (2, 0))])
+        Decayable.__init__(self, ttl)
         self.attack = attack
 
+    def process(self, timespan):
+        Movable.process(self, timespan)
+        Decayable.process(self, timespan)
+        self.shapes[0].real_start = [self.position[0] - self.speed[0] / 40, self.position[1] - self.speed[1] / 40]
+        self.shapes[0].real_end = [self.position[0] + self.speed[0] / 40, self.position[1] + self.speed[1] / 40]
+
 class Stats:
-    def __init__(self, hit_points_max = 0, hit_heal = 0, attack = 0, attack_cooldown_max = 0, attack_speed = 0, shield_points = 0, shield_heal = 0):
+    def __init__(self, hit_points_max = 0, hit_heal = 0, attack = 0, attack_cooldown_max = 0, attack_speed = 0, attack_ttl = 0, shield_points = 0, shield_heal = 0):
         self.hit_points_max = float(hit_points_max)
         self.hit_points = self.hit_points_max
         self.hit_heal = float(hit_heal)
@@ -81,6 +100,7 @@ class Stats:
         self.attack_cooldown_max = float(attack_cooldown_max)
         self.attack_cooldown = .0
         self.attack_speed = float(attack_speed)
+        self.attack_ttl = float(attack_ttl)
         self.shield_points = float(shield_points)
         self.shield_heal = float(shield_heal)
 
@@ -136,12 +156,13 @@ class Spacecraft(Movable, Collidable):
 
     def shoot(self, world):
         for weapon in filter(lambda x: x.stats.attack > 0 and x.stats.attack_cooldown <= 0, self.parts):
-            shot = Shot(weapon.stats.attack, weapon.shapes[0].real_start[0], weapon.shapes[0].real_start[1], math.cos(self.rotation) * weapon.stats.attack_speed, -math.sin(self.rotation) * weapon.stats.attack_speed)
+            shot = Shot(weapon.stats.attack, weapon.stats.attack_ttl, weapon.shapes[0].real_start[0], weapon.shapes[0].real_start[1], math.cos(self.rotation) * weapon.stats.attack_speed, -math.sin(self.rotation) * weapon.stats.attack_speed)
             weapon.stats.attack_cooldown = weapon.stats.attack_cooldown_max
-            #world.drawable.append(shot)
-            world.mutable.append(shot)
-            #world.collidable.append(shot)
+            # a shot is movable, collidable, decayable
             world.shots.append(shot)
+            world.mutable.append(shot)
+            world.decayable.append(shot)
+            world.collidable.append(shot)
 
 class Background(Drawable):
     def __init__(self, screen_size):
@@ -165,20 +186,34 @@ class World:
 
         self.player = Spacecraft(
             [Part(Stats(hit_points_max = 100, hit_heal = 1), copy.deepcopy(chassis_one), 0, 0, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .5, attack_speed = 200), copy.deepcopy(laser_one), 2, 6, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .5, attack_speed = 200), copy.deepcopy(laser_one), 2, -6, 0)])
+             Part(Stats(attack = 2.5, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, 6, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, -6, 0)])
 
         self.hostile = Spacecraft(
             [Part(Stats(hit_points_max = 100), copy.deepcopy(chassis_one), 0, 0, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 50), copy.deepcopy(laser_one), 2, 6, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 50), copy.deepcopy(laser_one), 2, -6, 0)])
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 50, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, 6, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 50, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, -6, 0)])
         self.hostile.position = [100.0, 10.0]
         self.hostile.rotation = 1.0
 
+        # fast access lists
         self.spacecrafts = [self.player, self.hostile]
-        self.mutable = [self.player, self.hostile]
         self.shots = []
+        self.mutable = [self.player, self.hostile]
         self.collidable = [self.player, self.hostile]
+        self.decayable = []
+
+    def remove_entity(self, entity):
+        if isinstance(entity, Spacecraft):
+            self.spacecrafts.remove(entity)
+        if isinstance(entity, Shot):
+            self.shots.remove(entity)
+        if isinstance(entity, Mutable):
+            self.mutable.remove(entity)
+        if isinstance(entity, Collidable):
+            self.collidable.remove(entity)
+        if isinstance(entity, Decayable):
+            self.decayable.remove(entity)
 
 def collides(shapes1, shapes2):
     '''Takes two shape sequences and checks if they overlap. Returns (x, y) if they do, else None.'''
@@ -200,6 +235,9 @@ def collides(shapes1, shapes2):
                     # don't calculate the intersection point if the bounding boxes don't overlap
                     if min(x1, x2) <= max(x3, x4) and min(x3, x4) <= max(x1, x2) and min(y1, y2) <= max(y3, y4) and min(y3, y4) <= max(y1, y2):
                         denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+                        # abort on (almost) parallel lines
+                        if denominator < 5:
+                            continue
                         x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / denominator
                         y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denominator
                         # check if the intersection point is in the overlap box
