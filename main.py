@@ -9,6 +9,7 @@ import copy
 import lightning
 import world
 import drawing
+import engine
 
 
 SCREEN_SIZE = [1024, 700]
@@ -67,7 +68,8 @@ def count_overlapping_pixels(rect1, rect2):
 pygame.init()
 pygame.display.set_caption('Spac0r')
 fps_clock = pygame.time.Clock()
-surf_display = pygame.display.set_mode(SCREEN_SIZE)
+surf_display = pygame.display.set_mode(SCREEN_SIZE) #, DOUBLEBUF | FULLSCREEN)
+surf_display.set_alpha(None)
 surf_fps = None
 #surf_planet1 = pygame.image.load('img/planet1.png')
 w = world.World(SCREEN_SIZE)
@@ -93,7 +95,7 @@ while True:
 
     # draw things that don't need to be processed further
     surf_display.fill(drawer.col_black)
-    drawer.draw_background(w.background)
+    drawer.draw_background(w.background, False)     # True for perfect anti-alias, False for performance
 
     # processing
     current_time = time.time()
@@ -123,11 +125,13 @@ while True:
     for spacecraft in w.spacecrafts:
         drawer.draw_spacecraft(spacecraft)
     for shot in w.shots:
-        drawer.draw_shot(shot)
+        engine_surfaces = max(drawer.draw_shot(shot), engine_surfaces)
 
     # render fps and update display
-    surf_fps = drawer.font_sans.render('%.1f' % fps_clock.get_fps(), False, drawer.col_red)
+    surf_fps = drawer.font_sans.render('%.1f' % fps_clock.get_fps(), True, drawer.col_red)
     surf_display.blit(surf_fps, (1, -2))
+    surf_info = drawer.font_sans.render('engine surfaces: ' + str(len(engine.surf_temp)), True, drawer.col_red)
+    surf_display.blit(surf_info, (1, 10))
     pygame.display.update()
 
     # events

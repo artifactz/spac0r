@@ -74,9 +74,10 @@ class Decayable:
         self.ttl = max(self.ttl - timespan, 0)
 
 class Particle(Movable, Decayable):
-    def __init__(self, x, y, sx = .0, sy = .0):
+    def __init__(self, color, x, y, sx = .0, sy = .0):
         Movable.__init__(self, x, y, .0, sx, sy)
         Decayable.__init__(self, ttl)
+        self.color = color
 
 class Shot(Movable, Collidable, Decayable):
     def __init__(self, attack, ttl, x, y, sx = .0, sy = .0):
@@ -159,10 +160,11 @@ class Spacecraft(Movable, Collidable):
             shot = Shot(weapon.stats.attack, weapon.stats.attack_ttl, weapon.shapes[0].real_start[0], weapon.shapes[0].real_start[1], math.cos(self.rotation) * weapon.stats.attack_speed, -math.sin(self.rotation) * weapon.stats.attack_speed)
             weapon.stats.attack_cooldown = weapon.stats.attack_cooldown_max
             # a shot is movable, collidable, decayable
-            world.shots.append(shot)
-            world.mutable.append(shot)
-            world.decayable.append(shot)
-            world.collidable.append(shot)
+            world.add_entity(shot)
+            #world.shots.append(shot)
+            #world.mutable.append(shot)
+            #world.decayable.append(shot)
+            #world.collidable.append(shot)
 
 class Background(Drawable):
     def __init__(self, screen_size):
@@ -202,6 +204,18 @@ class World:
         self.mutable = [self.player, self.hostile]
         self.collidable = [self.player, self.hostile]
         self.decayable = []
+
+    def add_entity(self, entity):
+        if isinstance(entity, Spacecraft):
+            self.spacecrafts.append(entity)
+        if isinstance(entity, Shot):
+            self.shots.append(entity)
+        if isinstance(entity, Mutable):
+            self.mutable.append(entity)
+        if isinstance(entity, Collidable):
+            self.collidable.append(entity)
+        if isinstance(entity, Decayable):
+            self.decayable.append(entity)
 
     def remove_entity(self, entity):
         if isinstance(entity, Spacecraft):
