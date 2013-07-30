@@ -34,9 +34,12 @@ class Drawer:
         '''Draws the background (stars that is).
         If pix_anti_alias is set to True, real pixel anti-aliasing is used (slow),
         if set to False, the method uses short aa-lines to mimic pixels (fast).'''
-        pix = pygame.PixelArray(self.surface)
-        w = len(pix)
-        h = len(pix[0])
+        if pix_anti_alias:
+            pix = pygame.PixelArray(self.surface)
+            w = len(pix)
+            h = len(pix[0])
+        else:
+            (w, h) = self.surface.get_size()
         for star in background.stars:
             x = (star.position[0] - self.camera.position[0]) / float(star.position[2]) + self.camera.half_screen_size[0]
             y = (star.position[1] - self.camera.position[1]) / float(star.position[2]) + self.camera.half_screen_size[1]
@@ -76,7 +79,8 @@ class Drawer:
                     pygame.draw.aaline(self.surface, pygame.Color(star.color[0], star.color[1], star.color[2]), (x - 0.5, y), (x + 0.5, y + 0.1))
             else:
                 star.reset(self.camera)
-        del pix
+        if pix_anti_alias:
+            del pix
 
     def draw_transformed_line(self, color, (x1, y1), (x2, y2), dx, dy, rotation):
         '''applies rotation, then translation, then draws the line.'''
@@ -88,9 +92,16 @@ class Drawer:
         pix = pygame.PixelArray(self.surface)
         w = len(pix)
         h = len(pix[0])
+        off = self.camera.get_offset()
         for particle in particles:
-            # TODO
-            pass
+            x = int(particle.position[0] + off[0])
+            y = int(particle.position[1] + off[1])
+            if x >= 0 and x < w and y >= 0 and y < h:
+                alpha = min(particle.ttl, 1)
+                col = pygame.Color(pix[x][y])
+                pix[x][y] = (min(int(col.r + particle.color[0] * alpha), 255),
+                    min(int(col.g + particle.color[1] * alpha), 255),
+                    min(int(col.b + particle.color[2] * alpha), 255))
         del pix
 
     def draw_shot(self, shot):

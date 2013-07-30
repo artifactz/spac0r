@@ -74,10 +74,14 @@ class Decayable:
         self.ttl = max(self.ttl - timespan, 0)
 
 class Particle(Movable, Decayable):
-    def __init__(self, color, x, y, sx = .0, sy = .0):
+    def __init__(self, color, ttl, x, y, sx = .0, sy = .0):
         Movable.__init__(self, x, y, .0, sx, sy)
         Decayable.__init__(self, ttl)
         self.color = color
+
+    def process(self, timespan):
+        Movable.process(self, timespan)
+        Decayable.process(self, timespan)
 
 class Shot(Movable, Collidable, Decayable):
     def __init__(self, attack, ttl, x, y, sx = .0, sy = .0):
@@ -159,12 +163,7 @@ class Spacecraft(Movable, Collidable):
         for weapon in filter(lambda x: x.stats.attack > 0 and x.stats.attack_cooldown <= 0, self.parts):
             shot = Shot(weapon.stats.attack, weapon.stats.attack_ttl, weapon.shapes[0].real_start[0], weapon.shapes[0].real_start[1], math.cos(self.rotation) * weapon.stats.attack_speed, -math.sin(self.rotation) * weapon.stats.attack_speed)
             weapon.stats.attack_cooldown = weapon.stats.attack_cooldown_max
-            # a shot is movable, collidable, decayable
             world.add_entity(shot)
-            #world.shots.append(shot)
-            #world.mutable.append(shot)
-            #world.decayable.append(shot)
-            #world.collidable.append(shot)
 
 class Background(Drawable):
     def __init__(self, screen_size):
@@ -201,6 +200,7 @@ class World:
         # fast access lists
         self.spacecrafts = [self.player, self.hostile]
         self.shots = []
+        self.particles = []
         self.mutable = [self.player, self.hostile]
         self.collidable = [self.player, self.hostile]
         self.decayable = []
@@ -210,6 +210,8 @@ class World:
             self.spacecrafts.append(entity)
         if isinstance(entity, Shot):
             self.shots.append(entity)
+        if isinstance(entity, Particle):
+            self.particles.append(entity)
         if isinstance(entity, Mutable):
             self.mutable.append(entity)
         if isinstance(entity, Collidable):
@@ -222,12 +224,24 @@ class World:
             self.spacecrafts.remove(entity)
         if isinstance(entity, Shot):
             self.shots.remove(entity)
+        if isinstance(entity, Particle):
+            self.particles.remove(entity)
         if isinstance(entity, Mutable):
             self.mutable.remove(entity)
         if isinstance(entity, Collidable):
             self.collidable.remove(entity)
         if isinstance(entity, Decayable):
             self.decayable.remove(entity)
+
+    def spacecraft_hit_by_shot(self, spacecraft, shot, position):
+        for x in xrange(0, 10):
+            angle = math.atan2(shot.speed[1], shot.speed[0]) + (random.random() + random.random()) - 1 + math.pi
+            speed = math.sqrt(shot.speed[0]**2 + shot.speed[1]**2) * (random.random() * random.random() / 2 + 0.05)
+            sx = math.cos(angle) * speed
+            sy = math.sin(angle) * speed
+            ttl = random.random() + 1
+            self.add_entity(Particle((255, 255, 0), ttl, position[0], position[1], sx, sy))
+        self.remove_entity(shot)
 
 def collides(shapes1, shapes2):
     '''Takes two shape sequences and checks if they overlap. Returns (x, y) if they do, else None.'''

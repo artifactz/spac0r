@@ -116,16 +116,17 @@ while True:
             if not collidable2 in processed:
                 pos = world.collides(collidable1.shapes, collidable2.shapes)
                 if pos:
-                    #print collidable1, 'and', collidable2, 'collide at', pos
-                    off = drawer.camera.get_offset()
-                    pygame.draw.line(surf_display, drawer.col_red, (off[0] + pos[0], 0), (off[0] + pos[0], SCREEN_SIZE[1]))
-                    pygame.draw.line(surf_display, drawer.col_red, (0, off[1] + pos[1]), (SCREEN_SIZE[0], off[1] + pos[1]))
+                    if isinstance(collidable1, world.Spacecraft) and isinstance(collidable2, world.Shot):
+                        w.spacecraft_hit_by_shot(collidable1, collidable2, pos)
+                    if isinstance(collidable1, world.Shot) and isinstance(collidable2, world.Spacecraft):
+                        w.spacecraft_hit_by_shot(collidable2, collidable1, pos)
 
     # draw processed things
     for spacecraft in w.spacecrafts:
         drawer.draw_spacecraft(spacecraft)
     for shot in w.shots:
-        engine_surfaces = max(drawer.draw_shot(shot), engine_surfaces)
+        drawer.draw_shot(shot)
+    drawer.draw_particles(w.particles)
 
     # render fps and update display
     surf_fps = drawer.font_sans.render('%.1f' % fps_clock.get_fps(), True, drawer.col_red)
@@ -134,23 +135,13 @@ while True:
     surf_display.blit(surf_info, (1, 10))
     pygame.display.update()
 
-    # events
-    if key_pressed[K_w]:
-        w.player.speed[0] += math.cos(w.player.rotation)
-        w.player.speed[1] -= math.sin(w.player.rotation)
-
-    if key_pressed[K_s]:
-        w = world.World(SCREEN_SIZE)
-
-    if mouse_pressed[1]:
-        w.player.shoot(w)
-
 #    for planet in planets:
 #        planet.draw(surf_display)
 #        planet.position[1] += planet.speed
 #        if planet.position[1] > SCREEN_SIZE[1]:
 #            planet.reset()
 
+    # events
     for event in pygame.event.get():
         if event.type == QUIT or (event.type == KEYDOWN and event.key == K_q):
             pygame.quit()
@@ -165,5 +156,21 @@ while True:
             mouse_pressed[event.button] = True
         if event.type == MOUSEBUTTONUP:
             mouse_pressed[event.button] = False
+    # controls
+    if key_pressed[K_w]:
+        w.player.speed[0] += math.cos(w.player.rotation) * 200 * timespan
+        w.player.speed[1] -= math.sin(w.player.rotation) * 200 * timespan
+    if key_pressed[K_s]:
+        w.player.speed[0] += math.cos(w.player.rotation + math.pi) * 200 * timespan
+        w.player.speed[1] -= math.sin(w.player.rotation + math.pi) * 200 * timespan
+    if key_pressed[K_a]:
+        w.player.speed[0] += math.cos(w.player.rotation + math.pi / 2) * 200 * timespan
+        w.player.speed[1] -= math.sin(w.player.rotation + math.pi / 2) * 200 * timespan
+    if key_pressed[K_d]:
+        w.player.speed[0] += math.cos(w.player.rotation - math.pi / 2) * 200 * timespan
+        w.player.speed[1] -= math.sin(w.player.rotation - math.pi / 2) * 200 * timespan
+
+    if mouse_pressed[1]:
+        w.player.shoot(w)
 
     fps_clock.tick(500)
