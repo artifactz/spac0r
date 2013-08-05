@@ -4,7 +4,7 @@
 import pygame
 from pygame.locals import *
 import random
-import numpy
+#import numpy
 import math
 
 OUTERBLUR = 1
@@ -32,7 +32,7 @@ def _draw_texture(surf, type, color, alpha):
         for y in xrange(0, len(pix[0])):
             vx = x - R
             vy = y - R
-            r = min(numpy.sqrt(vx**2 + vy**2) / R, 1.0)
+            r = min(math.sqrt(vx**2 + vy**2) / R, 1.0)
             result = int(_get_alpha(r, type) * alpha)
             pix[x][y] = pygame.Color(color[0], color[1], color[2], result)
     del pix

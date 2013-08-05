@@ -4,7 +4,7 @@
 import pygame
 from pygame.locals import *
 import random
-import numpy
+#import numpy
 import math
 import flaregen
 import engine
@@ -51,7 +51,7 @@ class Lightning:
         #visibility = count_overlapping_pixels((self.position[0] - w / 2, self.position[1] - h / 2, self.position[0] + w / 2, self.position[1] + h / 2), (0, 0, SCREEN_SIZE[0], SCREEN_SIZE[1])) / (w * h)
         visibility = intensity
         # angle from center
-        at2 = numpy.arctan2(vy, vx)
+        at2 = math.atan2(vy, vx) #numpy.arctan2(vy, vx)
         if at2 < 0:
             at2 += math.pi * 2
         deg = at2 * 180.0
@@ -61,7 +61,7 @@ class Lightning:
         surf.blit(n, (x - s[0] / 2, y - s[1] / 2))
         # LENS FLARE
         # a lil sine flicker
-        flicker = numpy.sin(time.time() * 20.0) + numpy.sin(time.time() * 17.0) + numpy.sin(time.time() * 24.37) * visibility * 10.0
+        flicker = math.sin(time.time() * 20.0) + math.sin(time.time() * 17.0) + math.sin(time.time() * 24.37) * visibility * 10.0
         visibility = int(visibility * 255.0 + flicker - 15.0)
         visibility = max(0, visibility)
         s = self.surf_flare1.get_size()

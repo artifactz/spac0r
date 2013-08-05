@@ -97,7 +97,7 @@ class Shot(Movable, Collidable, Decayable):
         self.shapes[0].real_end = [self.position[0] + self.speed[0] / 40, self.position[1] + self.speed[1] / 40]
 
 class Stats:
-    def __init__(self, hit_points_max = 0, hit_heal = 0, attack = 0, attack_cooldown_max = 0, attack_speed = 0, attack_ttl = 0, shield_points = 0, shield_heal = 0):
+    def __init__(self, hit_points_max = 0, hit_heal = 0, attack = 0, attack_cooldown_max = 0, attack_speed = 0, attack_ttl = 0, shield_points_max = 0, shield_heal = 0):
         self.hit_points_max = float(hit_points_max)
         self.hit_points = self.hit_points_max
         self.hit_heal = float(hit_heal)
@@ -106,7 +106,8 @@ class Stats:
         self.attack_cooldown = .0
         self.attack_speed = float(attack_speed)
         self.attack_ttl = float(attack_ttl)
-        self.shield_points = float(shield_points)
+        self.shield_points_max = float(shield_points_max)
+        self.shield_points = self.shield_points_max
         self.shield_heal = float(shield_heal)
 
 class Shape:
@@ -135,9 +136,16 @@ class Spacecraft(Movable, Collidable):
     def __init__(self, parts):
         Movable.__init__(self, .0, .0)
         self.parts = parts
+        self.stats = Stats()
         shapes = []
         for part in self.parts:
             shapes += part.shapes
+            self.stats.hit_points_max += part.stats.hit_points_max
+            self.stats.hit_points += part.stats.hit_points
+            self.stats.hit_heal += part.stats.hit_heal
+            self.stats.shield_points_max += part.stats.shield_points_max
+            self.stats.shield_points += part.stats.shield_points
+            self.stats.shield_heal += part.stats.shield_heal
         Collidable.__init__(self, shapes)
 
     def process(self, timespan):
@@ -165,6 +173,17 @@ class Spacecraft(Movable, Collidable):
             weapon.stats.attack_cooldown = weapon.stats.attack_cooldown_max
             world.add_entity(shot)
 
+    def explode(self, world):
+        # generate some particles
+        for x in xrange(0, 500):
+            angle = random.random() * math.pi * 2
+            speed = (1 - random.random()**5) * 90
+            sx = math.cos(angle) * speed
+            sy = math.sin(angle) * speed
+            ttl = (1 - random.random()**2) * 2
+            world.add_entity(Particle((255, 232, 0), ttl, self.position[0], self.position[1], sx, sy))
+        world.remove_entity(self)
+
 class Background(Drawable):
     def __init__(self, screen_size):
         self.star_gradient = Gradient([(0, 0, 0, 0), (.4, 16, 16, 96), (1, 255, 255, 255)])
@@ -187,8 +206,8 @@ class World:
 
         self.player = Spacecraft(
             [Part(Stats(hit_points_max = 100, hit_heal = 1), copy.deepcopy(chassis_one), 0, 0, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, 6, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, -6, 0)])
+             Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, 6, 0),
+             Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, -6, 0)])
 
         self.hostile = Spacecraft(
             [Part(Stats(hit_points_max = 100), copy.deepcopy(chassis_one), 0, 0, 0),
@@ -234,6 +253,7 @@ class World:
             self.decayable.remove(entity)
 
     def spacecraft_hit_by_shot(self, spacecraft, shot, position):
+        # generate some particles
         for x in xrange(0, 10):
             angle = math.atan2(shot.speed[1], shot.speed[0]) + (random.random() + random.random()) - 1 + math.pi
             speed = math.sqrt(shot.speed[0]**2 + shot.speed[1]**2) * (random.random() * random.random() / 2 + 0.05)
@@ -241,6 +261,9 @@ class World:
             sy = math.sin(angle) * speed
             ttl = random.random() + 1
             self.add_entity(Particle((255, 255, 0), ttl, position[0], position[1], sx, sy))
+        # decrease spacecraft hp
+        spacecraft.stats.hit_points -= shot.attack
+        # remove shot
         self.remove_entity(shot)
 
 def collides(shapes1, shapes2):

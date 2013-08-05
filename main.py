@@ -103,7 +103,6 @@ while True:
     processing_tick = current_time
     for mutable in w.mutable:
         mutable.process(timespan)
-
     # check if decayed
     for decayable in w.decayable:
         if decayable.ttl == 0:
@@ -120,6 +119,10 @@ while True:
                         w.spacecraft_hit_by_shot(collidable1, collidable2, pos)
                     if isinstance(collidable1, world.Shot) and isinstance(collidable2, world.Spacecraft):
                         w.spacecraft_hit_by_shot(collidable2, collidable1, pos)
+    # check if spacecraft's still living
+    for spacecraft in w.spacecrafts:
+        if spacecraft.stats.hit_points <= 0:
+            spacecraft.explode(w)
 
     # draw processed things
     for spacecraft in w.spacecrafts:
