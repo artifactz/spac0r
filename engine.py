@@ -30,7 +30,7 @@ def draw_line_alpha(target, color, start, end, alpha):
     target.blit(temp, (off[0] - 1, off[1] - 1))
 
 def get_surface(width, height):
-    key = width * 1000000 + height
+    key = (width, height)
     if not surf_temp.has_key(key):
         temp = pygame.Surface((width, height)).convert()
         surf_temp[key] = temp

@@ -97,7 +97,7 @@ class Shot(Movable, Collidable, Decayable):
         self.shapes[0].real_end = [self.position[0] + self.speed[0] / 40, self.position[1] + self.speed[1] / 40]
 
 class Stats:
-    def __init__(self, hit_points_max = 0, hit_heal = 0, attack = 0, attack_cooldown_max = 0, attack_speed = 0, attack_ttl = 0, shield_points_max = 0, shield_heal = 0):
+    def __init__(self, hit_points_max = 0, hit_heal = 0, attack = 0, attack_cooldown_max = 0, attack_speed = 0, attack_ttl = 0, shield_points_max = 0, shield_heal = 0, rotation_speed = 0, accerlation = 0, speed_max = 0):
         self.hit_points_max = float(hit_points_max)
         self.hit_points = self.hit_points_max
         self.hit_heal = float(hit_heal)
@@ -109,6 +109,9 @@ class Stats:
         self.shield_points_max = float(shield_points_max)
         self.shield_points = self.shield_points_max
         self.shield_heal = float(shield_heal)
+        self.rotation_speed = float(rotation_speed)
+        self.accerlation = float(accerlation)
+        self.speed_max = float(speed_max)
 
 class Shape:
     def __init__(self, color):
@@ -146,9 +149,38 @@ class Spacecraft(Movable, Collidable):
             self.stats.shield_points_max += part.stats.shield_points_max
             self.stats.shield_points += part.stats.shield_points
             self.stats.shield_heal += part.stats.shield_heal
+            self.stats.rotation_speed += part.stats.rotation_speed
+            self.stats.accerlation += part.stats.accerlation
+            self.stats.speed_max += part.stats.speed_max
         Collidable.__init__(self, shapes)
+        self.steer = [False] * 4
+        self.rotate_to = 0
 
     def process(self, timespan):
+        # steering
+        if self.steer[0]:   # straight
+            self.speed[0] += math.cos(self.rotation) * self.stats.accerlation * timespan
+            self.speed[1] -= math.sin(self.rotation) * self.stats.accerlation * timespan
+        if self.steer[1]:   # back
+            self.speed[0] += math.cos(self.rotation + math.pi) * self.stats.accerlation * timespan
+            self.speed[1] -= math.sin(self.rotation + math.pi) * self.stats.accerlation * timespan
+        if self.steer[2]:   # left
+            self.speed[0] += math.cos(self.rotation + math.pi / 2) * self.stats.accerlation * timespan
+            self.speed[1] -= math.sin(self.rotation + math.pi / 2) * self.stats.accerlation * timespan
+        if self.steer[3]:   # right
+            self.speed[0] += math.cos(self.rotation - math.pi / 2) * self.stats.accerlation * timespan
+            self.speed[1] -= math.sin(self.rotation - math.pi / 2) * self.stats.accerlation * timespan
+        for x in xrange(0, 4):
+            self.steer[x] = False
+        # rotation
+        if abs(self.rotate_to - self.rotation) <= self.stats.rotation_speed * timespan:
+            self.rotation = self.rotate_to
+        else:
+            if self.rotation > self.rotate_to:
+                self.rotation -= self.stats.rotation_speed * timespan
+            else:
+                self.rotation += self.stats.rotation_speed * timespan
+        # misc
         Movable.process(self, timespan)
         for part in self.parts:
             part.process(timespan)
@@ -167,6 +199,26 @@ class Spacecraft(Movable, Collidable):
                     shape.real_start = (cos2 * shape.start[0] + sin2 * shape.start[1] + dx, cos2 * shape.start[1] - sin2 * shape.start[0] + dy)
                     shape.real_end = (cos2 * shape.end[0] + sin2 * shape.end[1] + dx, cos2 * shape.end[1] - sin2 * shape.end[0] + dy)
 
+    def steer_straight(self):
+        self.steer[0] = True
+
+    def steer_back(self):
+        self.steer[1] = True
+
+    def steer_left(self):
+        self.steer[2] = True
+
+    def steer_right(self):
+        self.steer[3] = True
+
+    def rotate(self, to):
+        self.rotate_to = to
+        self.rotation = self.rotation % (math.pi * 2)
+        while self.rotate_to - self.rotation > math.pi:
+            self.rotate_to -= math.pi * 2
+        while self.rotate_to - self.rotation < -math.pi:
+            self.rotate_to += math.pi * 2
+
     def shoot(self, world):
         for weapon in filter(lambda x: x.stats.attack > 0 and x.stats.attack_cooldown <= 0, self.parts):
             shot = Shot(weapon.stats.attack, weapon.stats.attack_ttl, weapon.shapes[0].real_start[0], weapon.shapes[0].real_start[1], math.cos(self.rotation) * weapon.stats.attack_speed, -math.sin(self.rotation) * weapon.stats.attack_speed)
@@ -177,7 +229,7 @@ class Spacecraft(Movable, Collidable):
         # generate some particles
         for x in xrange(0, 500):
             angle = random.random() * math.pi * 2
-            speed = (1 - random.random()**5) * 90
+            speed = (1 - random.random()**5) * 110
             sx = math.cos(angle) * speed
             sy = math.sin(angle) * speed
             ttl = (1 - random.random()**2) * 2
@@ -205,12 +257,12 @@ class World:
         laser_one = [Line(self.col_green, (-3, 0), (3, 0))]
 
         self.player = Spacecraft(
-            [Part(Stats(hit_points_max = 100, hit_heal = 1), copy.deepcopy(chassis_one), 0, 0, 0),
+            [Part(Stats(hit_points_max = 100, hit_heal = 1, rotation_speed = 2, accerlation = 50, speed_max = 60), copy.deepcopy(chassis_one), 0, 0, 0),
              Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, 6, 0),
              Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, -6, 0)])
 
         self.hostile = Spacecraft(
-            [Part(Stats(hit_points_max = 100), copy.deepcopy(chassis_one), 0, 0, 0),
+            [Part(Stats(hit_points_max = 100, rotation_speed = 1.25, accerlation = 50, speed_max = 30), copy.deepcopy(chassis_one), 0, 0, 0),
              Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 50, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, 6, 0),
              Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 50, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, -6, 0)])
         self.hostile.position = [100.0, 10.0]

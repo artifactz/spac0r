@@ -91,7 +91,7 @@ while True:
     v = [mouse_pos[0] - SCREEN_SIZE[0] / 2.0, mouse_pos[1] - SCREEN_SIZE[1] / 2.0]
     drawer.camera.position[0] = w.player.position[0] + v[0] * 0.9
     drawer.camera.position[1] = w.player.position[1] + v[1] * 0.9
-    w.player.rotation = math.atan2(-v[1], v[0])
+    w.player.rotate(math.atan2(-v[1], v[0]))
 
     # draw things that don't need to be processed further
     surf_display.fill(drawer.col_black)
@@ -161,19 +161,15 @@ while True:
             mouse_pressed[event.button] = False
     # controls
     if key_pressed[K_w]:
-        w.player.speed[0] += math.cos(w.player.rotation) * 200 * timespan
-        w.player.speed[1] -= math.sin(w.player.rotation) * 200 * timespan
+        w.player.steer_straight()
     if key_pressed[K_s]:
-        w.player.speed[0] += math.cos(w.player.rotation + math.pi) * 200 * timespan
-        w.player.speed[1] -= math.sin(w.player.rotation + math.pi) * 200 * timespan
+        w.player.steer_back()
     if key_pressed[K_a]:
-        w.player.speed[0] += math.cos(w.player.rotation + math.pi / 2) * 200 * timespan
-        w.player.speed[1] -= math.sin(w.player.rotation + math.pi / 2) * 200 * timespan
+        w.player.steer_left()
     if key_pressed[K_d]:
-        w.player.speed[0] += math.cos(w.player.rotation - math.pi / 2) * 200 * timespan
-        w.player.speed[1] -= math.sin(w.player.rotation - math.pi / 2) * 200 * timespan
+        w.player.steer_right()
 
     if mouse_pressed[1]:
         w.player.shoot(w)
 
-    fps_clock.tick(500)
+    fps_clock.tick(100)
