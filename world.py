@@ -4,6 +4,7 @@ import random
 import pygame
 import math
 import copy
+import pilots
 
 class Gradient:
     def __init__(self, color_list):
@@ -140,6 +141,7 @@ class Spacecraft(Movable, Collidable):
         Movable.__init__(self, .0, .0)
         self.parts = parts
         self.stats = Stats()
+        self.pilot = None
         shapes = []
         for part in self.parts:
             shapes += part.shapes
@@ -157,6 +159,9 @@ class Spacecraft(Movable, Collidable):
         self.rotate_to = 0
 
     def process(self, timespan):
+        # piloting
+        if self.pilot:
+            self.pilot.pilot()
         # steering
         if self.steer[0]:   # straight
             self.speed[0] += math.cos(self.rotation) * self.stats.accerlation * timespan
@@ -263,10 +268,11 @@ class World:
 
         self.hostile = Spacecraft(
             [Part(Stats(hit_points_max = 100, rotation_speed = 1.25, accerlation = 50, speed_max = 30), copy.deepcopy(chassis_one), 0, 0, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 50, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, 6, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 50, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, -6, 0)])
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, 6, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, -6, 0)])
         self.hostile.position = [100.0, 10.0]
         self.hostile.rotation = 1.0
+        self.hostile.pilot = pilots.AI_Pilot_Basic(self.hostile, self)
 
         # fast access lists
         self.spacecrafts = [self.player, self.hostile]
