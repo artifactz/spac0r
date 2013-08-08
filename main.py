@@ -12,25 +12,21 @@ import drawing
 import engine
 
 
-SCREEN_SIZE = [1024, 700]
+SCREEN_SIZE = [1024, 700] # [1366, 768]
 
 pygame.init()
 pygame.display.set_caption('Spac0r')
 fps_clock = pygame.time.Clock()
-surf_display = pygame.display.set_mode(SCREEN_SIZE) #, DOUBLEBUF | FULLSCREEN)
+surf_display = pygame.display.set_mode(SCREEN_SIZE, DOUBLEBUF, 32) # FULLSCREEN
 surf_display.set_alpha(None)
 surf_fps = None
 w = world.World(SCREEN_SIZE)
 camera = drawing.Camera(SCREEN_SIZE, 0.0, 0.0)
 drawer = drawing.Drawer(surf_display, camera)
-#lighter = lightning.Lightning()
 
 mouse_pos = (SCREEN_SIZE[0] / 2, SCREEN_SIZE[1] / 2)
 key_pressed = [False for x in xrange(0, 512)]
 mouse_pressed = [False for x in xrange(0, 6)]
-
-#planets = []
-#planets.append(Planet())
 
 processing_tick = time.time()
 
@@ -91,12 +87,6 @@ while True:
     surf_info = drawer.font_sans.render('engine surfaces: ' + str(len(engine.surf_alpha) + len(engine.surf_scale)), True, drawer.col_red)
     surf_display.blit(surf_info, (1, 10))
     pygame.display.update()
-
-#    for planet in planets:
-#        planet.draw(surf_display)
-#        planet.position[1] += planet.speed
-#        if planet.position[1] > SCREEN_SIZE[1]:
-#            planet.reset()
 
     # events
     for event in pygame.event.get():

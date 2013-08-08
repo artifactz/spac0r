@@ -193,6 +193,12 @@ class Spacecraft(Movable, Collidable):
                 self.rotation -= self.stats.rotation_speed * timespan
             else:
                 self.rotation += self.stats.rotation_speed * timespan
+        # respect the speed limit
+        speed = math.sqrt(self.speed[0]**2 + self.speed[1]**2)
+        if speed > self.stats.speed_max:
+            shrink = self.stats.speed_max / speed
+            self.speed[0] *= shrink
+            self.speed[1] *= shrink
         # misc
         Movable.process(self, timespan)
         for part in self.parts:
@@ -273,12 +279,12 @@ class World:
         laser_one = [Line(self.col_green, (-3, 0), (3, 0))]
 
         self.player = Spacecraft(
-            [Part(Stats(hit_points_max = 100, hit_heal = 1, rotation_speed = 2, accerlation = 50, speed_max = 60), copy.deepcopy(chassis_one), 0, 0, 0),
+            [Part(Stats(hit_points_max = 100, hit_heal = 1, rotation_speed = 2, accerlation = 50, speed_max = 100), copy.deepcopy(chassis_one), 0, 0, 0),
              Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, 6, 0),
              Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, -6, 0)])
 
         self.hostile = Spacecraft(
-            [Part(Stats(hit_points_max = 100, rotation_speed = 1.25, accerlation = 50, speed_max = 30), copy.deepcopy(chassis_one), 0, 0, 0),
+            [Part(Stats(hit_points_max = 100, rotation_speed = 1.25, accerlation = 50, speed_max = 60), copy.deepcopy(chassis_one), 0, 0, 0),
              Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, 6, 0),
              Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, -6, 0)])
         self.hostile.position = [100.0, 10.0]

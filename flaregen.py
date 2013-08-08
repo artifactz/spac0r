@@ -18,7 +18,7 @@ SMOOTHING = 0.1
 def gen_texture(size, type, color, alpha):
     '''Generates a single lens flare texture of given size: size x size, color: (r, g, b),
     type: OUTERBLUR | INNERBLUR1 | INNERBLUR2 | INNERBLUR3 and opacity: alpha.'''
-    surf = pygame.Surface((size, size), flags=SRCALPHA)
+    surf = pygame.Surface((size, size), SRCALPHA | HWSURFACE, 32)
     surf = surf.convert_alpha()
     _draw_texture(surf, type, color, alpha)
     return surf

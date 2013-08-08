@@ -36,7 +36,8 @@ class Drawer:
         self.lens_flares = []
 
     def place_lens_flare(self, x, y, intensitiy):
-        self.lens_flares.append((x, y, intensitiy))
+        if intensitiy > 0:
+            self.lens_flares.append((x, y, intensitiy))
 
     def draw_lens_flares(self):
         for flare in self.lens_flares:
@@ -104,6 +105,7 @@ class Drawer:
         # draw planet itself
         rect = self.surface.blit(surf, (x, y))
         intensitiy = rect.width * rect.height / float(self.surf_planet1_small.get_width() * self.surf_planet1_small.get_height())
+        intensitiy = 1 - (1 - intensitiy)**2
         self.place_lens_flare(rect.left + rect.width / 2, rect.top + rect.height / 2, intensitiy)
 
     def draw_transformed_line(self, color, (x1, y1), (x2, y2), dx, dy, rotation):
