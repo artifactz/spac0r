@@ -40,6 +40,8 @@ class Lightning:
         '''Draws a lens flare on a given surface: surf at position: x, y with intensity: intensity.
         If flicker is set to True, intensity will be slightly modified by some sine functions.'''
 
+        intensity = float(intensity)
+        
         # TODO flicker multiplicative!
 
         # display size

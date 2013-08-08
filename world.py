@@ -29,6 +29,7 @@ class Gradient:
                 b = int((self.color_list[i - 1][3] * (1 - ratio2) + self.color_list[i][3] * ratio2))
                 return (r, g, b)
 
+# ABSTRACT
 class Drawable:
     def __init__(self, x, y, rotation = .0):
         self.position = [x, y]
@@ -51,6 +52,18 @@ class Movable(Mutable):
         self.position[0] += self.speed[0] * timespan
         self.position[1] += self.speed[1] * timespan
 
+class Collidable:
+    def __init__(self, shapes):
+        self.shapes = shapes
+
+class Decayable:
+    def __init__(self, ttl):
+        self.ttl = ttl
+
+    def process(self, timespan):
+        self.ttl = max(self.ttl - timespan, 0)
+
+# INSTANTIABLE
 class Star(Drawable):
     def __init__(self, x, y, z, star_gradient):
         Drawable.__init__(self, x, y)
@@ -63,16 +76,10 @@ class Star(Drawable):
         self.position[0] += v[0] * 2
         self.position[1] += v[1] * 2
 
-class Collidable:
-    def __init__(self, shapes):
-        self.shapes = shapes
-
-class Decayable:
-    def __init__(self, ttl):
-        self.ttl = ttl
-
-    def process(self, timespan):
-        self.ttl = max(self.ttl - timespan, 0)
+class Planet(Drawable):
+    def __init__(self, x, y, size):
+        Drawable.__init__(self, x, y)
+        self.size = size
 
 class Particle(Movable, Decayable):
     def __init__(self, color, ttl, x, y, sx = .0, sy = .0):
@@ -85,11 +92,12 @@ class Particle(Movable, Decayable):
         Decayable.process(self, timespan)
 
 class Shot(Movable, Collidable, Decayable):
-    def __init__(self, attack, ttl, x, y, sx = .0, sy = .0):
+    def __init__(self, attack, ttl, origin, x, y, sx = .0, sy = .0):
         Movable.__init__(self, x, y, .0, sx, sy)
         Collidable.__init__(self, [Line(None, (-2, 0), (2, 0))])
         Decayable.__init__(self, ttl)
         self.attack = attack
+        self.origin = origin
 
     def process(self, timespan):
         Movable.process(self, timespan)
@@ -226,7 +234,7 @@ class Spacecraft(Movable, Collidable):
 
     def shoot(self, world):
         for weapon in filter(lambda x: x.stats.attack > 0 and x.stats.attack_cooldown <= 0, self.parts):
-            shot = Shot(weapon.stats.attack, weapon.stats.attack_ttl, weapon.shapes[0].real_start[0], weapon.shapes[0].real_start[1], math.cos(self.rotation) * weapon.stats.attack_speed, -math.sin(self.rotation) * weapon.stats.attack_speed)
+            shot = Shot(weapon.stats.attack, weapon.stats.attack_ttl, self, weapon.shapes[0].real_start[0], weapon.shapes[0].real_start[1], math.cos(self.rotation) * weapon.stats.attack_speed, -math.sin(self.rotation) * weapon.stats.attack_speed)
             weapon.stats.attack_cooldown = weapon.stats.attack_cooldown_max
             world.add_entity(shot)
 
@@ -256,7 +264,10 @@ class World:
         self.col_red   = pygame.Color(255, 0, 0)
         self.col_green = pygame.Color(0, 255, 0)
 
+        # stars
         self.background = Background(screen_size)
+        # planets
+        self.planets = [Planet(20, 50, .667)]
         # shapes
         chassis_one = [Line(self.col_green, (10, 0), (-10, 10)), Line(self.col_green, (-10, 10), (-10, -10)), Line(self.col_green, (-10, -10), (10, 0))]
         laser_one = [Line(self.col_green, (-3, 0), (3, 0))]

@@ -6,6 +6,7 @@ import math
 import copy
 import world
 import engine
+import lightning
 
 class Camera:
     def __init__(self, screen_size, x, y):
@@ -29,6 +30,18 @@ class Drawer:
         self.col_white = pygame.Color(255, 255, 255)
         self.col_red   = pygame.Color(255, 0, 0)
         self.col_green = pygame.Color(0, 255, 0)
+        self.surf_planet1 = pygame.image.load('img/planet1.png')
+        self.surf_planet1_small = pygame.transform.scale(self.surf_planet1, (48, 48))
+        self.lighter = lightning.Lightning()
+        self.lens_flares = []
+
+    def place_lens_flare(self, x, y, intensitiy):
+        self.lens_flares.append((x, y, intensitiy))
+
+    def draw_lens_flares(self):
+        for flare in self.lens_flares:
+            self.lighter.draw_lens_flare(self.surface, flare[0], flare[1], flare[2], True)
+        self.lens_flares = []
 
     def draw_background(self, background, pix_anti_alias = True):
         '''Draws the background (stars that is).
@@ -81,6 +94,17 @@ class Drawer:
                 star.reset(self.camera)
         if pix_anti_alias:
             del pix
+
+    def draw_planet(self, planet):
+        w = self.surf_planet1_small.get_width() * planet.size
+        h = self.surf_planet1_small.get_height() * planet.size
+        surf = engine.get_scale_surface(self.surf_planet1_small, w, h)
+        x = (planet.position[0] - w / 2 - self.camera.position[0]) * .5 + self.camera.half_screen_size[0]
+        y = (planet.position[1] - h / 2 - self.camera.position[1]) * .5 + self.camera.half_screen_size[1]
+        # draw planet itself
+        rect = self.surface.blit(surf, (x, y))
+        intensitiy = rect.width * rect.height / float(self.surf_planet1_small.get_width() * self.surf_planet1_small.get_height())
+        self.place_lens_flare(rect.left + rect.width / 2, rect.top + rect.height / 2, intensitiy)
 
     def draw_transformed_line(self, color, (x1, y1), (x2, y2), dx, dy, rotation):
         '''applies rotation, then translation, then draws the line.'''
