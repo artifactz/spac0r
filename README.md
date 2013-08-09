@@ -11,7 +11,8 @@ current featurez worth mentioning:
 - lens flares
 
 future:
-- spacecraft editor
+- animations, more light effects
+- spacecraft editing
 - menus / UIs
-- randomly procedural generated everything
-- diablo-like item hunting
+- diablo-like item hunting, spacecraft pimping
+- randomly procedurally generated everything
