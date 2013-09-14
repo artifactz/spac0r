@@ -144,3 +144,6 @@ class Drawer:
                 if isinstance(shape, world.Line):
                     pygame.draw.aaline(self.surface, shape.color,
                         (shape.real_start[0] + off[0], shape.real_start[1] + off[1]), (shape.real_end[0] + off[0], shape.real_end[1] + off[1]))
+                if isinstance(shape, world.Circle):
+                    #pygame.draw.circle(self.surface, shape.color, (int(shape.real_center[0] + off[0]), int(shape.real_center[1] + off[1])), int(shape.radius), 1)
+                    engine.draw_aa_circle(self.surface, shape.color, (shape.real_center[0] + off[0], shape.real_center[1] + off[1]), int(shape.radius), 16)

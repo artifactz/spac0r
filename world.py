@@ -134,13 +134,26 @@ class Line(Shape):
         self.real_start = [.0, .0]
         self.real_end = [.0, .0]
 
+class Circle(Shape):
+    def __init__(self, color, center, radius):
+        Shape.__init__(self, color)
+        self.center = center
+        self.radius = radius
+        self.real_center = [.0, .0]
+
 class Part(Drawable, Collidable):
-    def __init__(self, stats, shapes, x, y, rotation = .0):
+    def __init__(self, stats, shapes, x, y, rotation = .0, animator = None):
         Drawable.__init__(self, x, y, rotation)
         Collidable.__init__(self, shapes)
         self.stats = stats
+        self.animator = animator
+        if animator:
+            self.animation_time = random.random() * 100
 
     def process(self, timespan):
+        if self.animator:
+            self.animation_time += timespan
+            self.animator(self.shapes, self.animation_time)
         if self.stats.attack_cooldown > 0:
             self.stats.attack_cooldown = max(self.stats.attack_cooldown - timespan, 0)
 
@@ -212,11 +225,13 @@ class Spacecraft(Movable, Collidable):
             dx = self.position[0] + cos * self.parts[i].position[0] + sin * self.parts[i].position[1]
             dy = self.position[1] + cos * self.parts[i].position[1] - sin * self.parts[i].position[0]
             for shape in self.parts[i].shapes:
+                cos2 = math.cos(self.rotation + self.parts[i].rotation)
+                sin2 = math.sin(self.rotation + self.parts[i].rotation)
                 if isinstance(shape, Line):
-                    cos2 = math.cos(self.rotation + self.parts[i].rotation)
-                    sin2 = math.sin(self.rotation + self.parts[i].rotation)
                     shape.real_start = (cos2 * shape.start[0] + sin2 * shape.start[1] + dx, cos2 * shape.start[1] - sin2 * shape.start[0] + dy)
                     shape.real_end = (cos2 * shape.end[0] + sin2 * shape.end[1] + dx, cos2 * shape.end[1] - sin2 * shape.end[0] + dy)
+                if isinstance(shape, Circle):
+                    shape.real_center = (cos2 * shape.center[0] + sin2 * shape.center[1] + dx, cos2 * shape.center[1] - sin2 * shape.center[0] + dy)
 
     def steer_straight(self):
         self.steer[0] = True
@@ -265,28 +280,21 @@ class Background(Drawable):
 
 class World:
     def __init__(self, screen_size):
-        self.col_black = pygame.Color(0, 0, 0)
-        self.col_white = pygame.Color(255, 255, 255)
-        self.col_red   = pygame.Color(255, 0, 0)
-        self.col_green = pygame.Color(0, 255, 0)
-
         # stars
         self.background = Background(screen_size)
         # planets
         self.planets = [Planet(20, 50, .667)]
-        # shapes
-        chassis_one = [Line(self.col_green, (10, 0), (-10, 10)), Line(self.col_green, (-10, 10), (-10, -10)), Line(self.col_green, (-10, -10), (10, 0))]
-        laser_one = [Line(self.col_green, (-3, 0), (3, 0))]
 
         self.player = Spacecraft(
-            [Part(Stats(hit_points_max = 100, hit_heal = 1, rotation_speed = 2, accerlation = 50, speed_max = 100), copy.deepcopy(chassis_one), 0, 0, 0),
-             Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, 6, 0),
-             Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, -6, 0)])
+            [Part(Stats(hit_points_max = 100, hit_heal = 1), get_shape('chassis_one'), 0, 0, 0),
+             Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), get_shape('laser_one'), 2, 6, 0),
+             Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), get_shape('laser_one'), 2, -6, 0),
+             Part(Stats(rotation_speed = 2, accerlation = 50, speed_max = 100), get_shape('engine_one'), -4, 0, 0)])
 
         self.hostile = Spacecraft(
-            [Part(Stats(hit_points_max = 100, rotation_speed = 1.25, accerlation = 50, speed_max = 60), copy.deepcopy(chassis_one), 0, 0, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, 6, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), copy.deepcopy(laser_one), 2, -6, 0)])
+            [Part(Stats(hit_points_max = 100, rotation_speed = 1.25, accerlation = 50, speed_max = 60), get_shape('chassis_one'), 0, 0, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), get_shape('laser_one'), 2, 6, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), get_shape('laser_one'), 2, -6, 0)])
         self.hostile.position = [100.0, 10.0]
         self.hostile.rotation = 1.0
         self.hostile.pilot = pilots.AI_Pilot_Basic(self.hostile, self)
@@ -298,6 +306,9 @@ class World:
         self.mutable = [self.player, self.hostile]
         self.collidable = [self.player, self.hostile]
         self.decayable = []
+
+        #print self.player.shapes
+        #print self.hostile.shapes
 
     def add_entity(self, entity):
         if isinstance(entity, Spacecraft):
@@ -369,3 +380,17 @@ def collides(shapes1, shapes2):
                         # check if the intersection point is in the overlap box
                         if x <= max(x1, x2, x3, x4) and x >= min(x1, x2, x3, x4) and y <= max(y1, y2, y3, y4) and y >= min(y1, y2, y3, y4):
                             return x, y
+
+# PROTOTYPES
+col_black = pygame.Color(0, 0, 0)
+col_white = pygame.Color(255, 255, 255)
+col_red   = pygame.Color(255, 0, 0)
+col_green = pygame.Color(0, 255, 0)
+
+shapes = {}
+shapes['chassis_one'] = [Line(col_green, (10, 0), (-10, 10)), Line(col_green, (-10, 10), (-10, -10)), Line(col_green, (-10, -10), (10, 0))]
+shapes['laser_one'] = [Line(col_green, (-3, 0), (3, 0))]
+shapes['engine_one'] = [Circle(col_green, (0, 0), 6)]
+
+def get_shape(identifier):
+    return copy.deepcopy(shapes[identifier])
