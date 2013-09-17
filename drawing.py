@@ -133,7 +133,8 @@ class Drawer:
     def draw_shot(self, shot):
         off = self.camera.get_offset()
         alpha = min(int(shot.ttl * 400.0), 255)
-        engine.draw_line_alpha(self.surface, pygame.Color(0, 255, 0),
+        col = shot.origin.parts[0].shapes[0].color # shot color is the color of the first part's first shape of the originting spacecraft
+        engine.draw_line_alpha(self.surface, col,
             (off[0] + shot.shapes[0].real_start[0], off[1] + shot.shapes[0].real_start[1]),
             (off[0] + shot.shapes[0].real_end[0], off[1] + shot.shapes[0].real_end[1]), alpha)
 

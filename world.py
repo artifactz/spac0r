@@ -286,29 +286,33 @@ class World:
         self.planets = [Planet(20, 50, .667)]
 
         self.player = Spacecraft(
-            [Part(Stats(hit_points_max = 100, hit_heal = 1), get_shape('chassis_one'), 0, 0, 0),
-             Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), get_shape('laser_one'), 2, 6, 0),
-             Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), get_shape('laser_one'), 2, -6, 0),
-             Part(Stats(rotation_speed = 2, accerlation = 50, speed_max = 100), get_shape('engine_one'), -4, 0, 0)])
+            [Part(Stats(hit_points_max = 100, hit_heal = 1), get_shapes('chassis_one'), 0, 0, 0),
+             Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), get_shapes('laser_one'), 2, 6, 0),
+             Part(Stats(attack = 10, attack_cooldown_max = .5, attack_speed = 200, attack_ttl = 2.0), get_shapes('laser_one'), 2, -6, 0),
+             Part(Stats(rotation_speed = 2, accerlation = 50, speed_max = 100), get_shapes('engine_one'), -4, 0, 0, animator_engine_one)])
 
         self.hostile = Spacecraft(
-            [Part(Stats(hit_points_max = 100, rotation_speed = 1.25, accerlation = 50, speed_max = 60), get_shape('chassis_one'), 0, 0, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), get_shape('laser_one'), 2, 6, 0),
-             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), get_shape('laser_one'), 2, -6, 0)])
+            [Part(Stats(hit_points_max = 100, rotation_speed = 1.25, accerlation = 50, speed_max = 60), paint_shapes(get_shapes('chassis_one'), col_red), 0, 0, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), paint_shapes(get_shapes('laser_one'), col_red), 2, 6, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), paint_shapes(get_shapes('laser_one'), col_red), 2, -6, 0)])
         self.hostile.position = [100.0, 10.0]
         self.hostile.rotation = 1.0
         self.hostile.pilot = pilots.AI_Pilot_Basic(self.hostile, self)
 
+        self.hostile2 = Spacecraft(
+            [Part(Stats(hit_points_max = 100, rotation_speed = 1.25, accerlation = 50, speed_max = 60), paint_shapes(get_shapes('chassis_two'), col_red), 0, 0, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), paint_shapes(get_shapes('laser_one'), col_red), 8, 10, 0),
+             Part(Stats(attack = 2.5, attack_cooldown_max = .75, attack_speed = 100, attack_ttl = 2.0), paint_shapes(get_shapes('laser_one'), col_red), 8, -10, 0)])
+        self.hostile2.position = [-50.0, -10.0]
+        self.hostile2.pilot = pilots.AI_Pilot_Basic(self.hostile2, self)
+
         # fast access lists
-        self.spacecrafts = [self.player, self.hostile]
+        self.spacecrafts = [self.player, self.hostile, self.hostile2]
         self.shots = []
         self.particles = []
-        self.mutable = [self.player, self.hostile]
-        self.collidable = [self.player, self.hostile]
+        self.mutable = [self.player, self.hostile, self.hostile2]
+        self.collidable = [self.player, self.hostile, self.hostile2]
         self.decayable = []
-
-        #print self.player.shapes
-        #print self.hostile.shapes
 
     def add_entity(self, entity):
         if isinstance(entity, Spacecraft):
@@ -381,16 +385,37 @@ def collides(shapes1, shapes2):
                         if x <= max(x1, x2, x3, x4) and x >= min(x1, x2, x3, x4) and y <= max(y1, y2, y3, y4) and y >= min(y1, y2, y3, y4):
                             return x, y
 
-# PROTOTYPES
+# PROTOTYPE SECTION
+# colors
 col_black = pygame.Color(0, 0, 0)
 col_white = pygame.Color(255, 255, 255)
 col_red   = pygame.Color(255, 0, 0)
 col_green = pygame.Color(0, 255, 0)
 
+# shapes for parts
 shapes = {}
 shapes['chassis_one'] = [Line(col_green, (10, 0), (-10, 10)), Line(col_green, (-10, 10), (-10, -10)), Line(col_green, (-10, -10), (10, 0))]
 shapes['laser_one'] = [Line(col_green, (-3, 0), (3, 0))]
-shapes['engine_one'] = [Circle(col_green, (0, 0), 6)]
+shapes['engine_one'] = [Circle(col_green, (0, 0), 6), Line(col_green, (0, 0), (5, 0))]
+shapes['chassis_two'] = [Line(col_green, (0, 0), (-2, -10)), Line(col_green, (-2, -10), (-8, -4)),
+    Line(col_green, (-8, -4), (-4, 0)), Line(col_green, (-4, 0), (-8, 4)), Line(col_green, (-8, 4), (-2, 10)),
+    Line(col_green, (-2, 10), (0, 0)),
+    Line(col_green, (2, 0), (0, -13)), Line(col_green, (0, -13), (6, -10)), Line(col_green, (6, -10), (2, 0)),
+    Line(col_green, (2, 0), (0,  13)), Line(col_green, (0,  13), (6,  10)), Line(col_green, (6,  10), (2, 0)),
+    Line(col_green, (5, -2), (8, -10)), Line(col_green, (8, -10), (17, -2)), Line(col_green, (17, -2), (5, -2)),
+    Line(col_green, (5,  2), (8,  10)), Line(col_green, (8,  10), (17,  2)), Line(col_green, (17,  2), (5,  2))]
 
-def get_shape(identifier):
+def get_shapes(identifier):
     return copy.deepcopy(shapes[identifier])
+
+def paint_shapes(shapes, color):
+    for shape in shapes:
+        shape.color = color
+    return shapes
+
+# animators
+def animator_engine_one(shapes, animation_time):
+    if animation_time >= 3:
+        animation_time -= 3
+    arg = animation_time / 3. * math.pi * 2.
+    shapes[1].end = (math.cos(arg) * 5, math.sin(arg) * 5)

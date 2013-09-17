@@ -10,14 +10,19 @@ class AI_Pilot_Basic(AI_Pilot):
     def __init__(self, spacecraft, world):
         AI_Pilot.__init__(self, spacecraft, world)
         # look up weapon with highest dps
+        self.strongest_weapon = None
         dps_max = 0
         for part in filter(lambda x: x.stats.attack > 0, spacecraft.parts):
             dps = part.stats.attack / float(part.stats.attack_cooldown_max)
             if dps > dps_max:
                 self.strongest_weapon = part
                 dps_max = dps
-        self.shooting_range = self.strongest_weapon.stats.attack_speed * self.strongest_weapon.stats.attack_ttl
-        self.optimal_distance = self.shooting_range * .667
+        if self.strongest_weapon:
+            self.shooting_range = self.strongest_weapon.stats.attack_speed * self.strongest_weapon.stats.attack_ttl
+            self.optimal_distance = self.shooting_range * .667
+        else:
+            self.shooting_range = 0
+            self.optimal_distance = 350
 
     def pilot(self):
         # face player
