@@ -22,7 +22,8 @@ future:
 - etc.
 
 how to play:
-
-  git clone https://github.com/artifactz/spac0r.git
-  cd spac0r
-  ./main.py
+```bash
+git clone https://github.com/artifactz/spac0r.git
+cd spac0r
+./main.py
+```
