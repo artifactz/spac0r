@@ -392,7 +392,9 @@ col_green = pygame.Color(0, 255, 0)
 
 # shapes for parts
 shapes = {}
-shapes['chassis_one'] = [Line(col_green, (10, 0), (-10, 10)), Line(col_green, (-10, 10), (-10, -10)), Line(col_green, (-10, -10), (10, 0))]
+shapes['chassis_one'] = [Line(col_green, (10, 0), (-10, 11)), Line(col_green, (-10, -11), (10, 0)),
+    Line(col_green, (-10, -11), (-10, -8)), Line(col_green, (-10, -8), (-14, -4)), Line(col_green, (-14, -4), (-10, 0)),
+    Line(col_green, (-10,  11), (-10,  8)), Line(col_green, (-10,  8), (-14,  4)), Line(col_green, (-14,  4), (-10, 0))]
 shapes['laser_one'] = [Line(col_green, (-3, 0), (3, 0))]
 shapes['engine_one'] = [Circle(col_green, (0, 0), 6), Line(col_green, (0, 0), (5, 0))]
 shapes['chassis_two'] = [Line(col_green, (0, 0), (-2, -10)), Line(col_green, (-2, -10), (-8, -4)),
