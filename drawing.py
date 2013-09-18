@@ -146,3 +146,5 @@ class Drawer:
                 if isinstance(shape, world.Circle):
                     #pygame.draw.circle(self.surface, shape.color, (int(shape.real_center[0] + off[0]), int(shape.real_center[1] + off[1])), int(shape.radius), 1)
                     engine.draw_aa_circle(self.surface, shape.color, (shape.real_center[0] + off[0], shape.real_center[1] + off[1]), int(shape.radius), 16)
+                if isinstance(shape, world.Poly):
+                    pygame.draw.polygon(self.surface, shape.color, [[p[0] + off[0], p[1] + off[1]] for p in shape.real_pointlist], 0)

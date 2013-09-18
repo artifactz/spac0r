@@ -139,6 +139,12 @@ class Circle(Shape):
         self.radius = radius
         self.real_center = [.0, .0]
 
+class Poly(Shape):
+    def __init__(self, color, pointlist):
+        Shape.__init__(self, color)
+        self.pointlist = pointlist
+        self.real_pointlist = [[.0, .0] for x in pointlist]
+
 class Part(Drawable, Collidable):
     def __init__(self, stats, shapes, x, y, rotation = .0, animator = None):
         Drawable.__init__(self, x, y, rotation)
@@ -226,10 +232,13 @@ class Spacecraft(Movable, Collidable):
                 cos2 = math.cos(self.rotation + self.parts[i].rotation)
                 sin2 = math.sin(self.rotation + self.parts[i].rotation)
                 if isinstance(shape, Line):
-                    shape.real_start = (cos2 * shape.start[0] + sin2 * shape.start[1] + dx, cos2 * shape.start[1] - sin2 * shape.start[0] + dy)
-                    shape.real_end = (cos2 * shape.end[0] + sin2 * shape.end[1] + dx, cos2 * shape.end[1] - sin2 * shape.end[0] + dy)
+                    shape.real_start = [cos2 * shape.start[0] + sin2 * shape.start[1] + dx, cos2 * shape.start[1] - sin2 * shape.start[0] + dy]
+                    shape.real_end = [cos2 * shape.end[0] + sin2 * shape.end[1] + dx, cos2 * shape.end[1] - sin2 * shape.end[0] + dy]
                 if isinstance(shape, Circle):
-                    shape.real_center = (cos2 * shape.center[0] + sin2 * shape.center[1] + dx, cos2 * shape.center[1] - sin2 * shape.center[0] + dy)
+                    shape.real_center = [cos2 * shape.center[0] + sin2 * shape.center[1] + dx, cos2 * shape.center[1] - sin2 * shape.center[0] + dy]
+                if isinstance(shape, Poly):
+                    for x in xrange(0, len(shape.pointlist)):
+                        shape.real_pointlist[x] = [cos2 * shape.pointlist[x][0] + sin2 * shape.pointlist[x][1] + dx, cos2 * shape.pointlist[x][1] - sin2 * shape.pointlist[x][0] + dy]
 
     def steer_straight(self):
         self.steer[0] = True
@@ -396,7 +405,7 @@ shapes['chassis_one'] = [Line(col_green, (10, 0), (-10, 11)), Line(col_green, (-
     Line(col_green, (-10, -11), (-10, -8)), Line(col_green, (-10, -8), (-14, -4)), Line(col_green, (-14, -4), (-10, 0)),
     Line(col_green, (-10,  11), (-10,  8)), Line(col_green, (-10,  8), (-14,  4)), Line(col_green, (-14,  4), (-10, 0))]
 shapes['laser_one'] = [Line(col_green, (-3, 0), (3, 0))]
-shapes['engine_one'] = [Circle(col_green, (0, 0), 6), Line(col_green, (0, 0), (5, 0))]
+shapes['engine_one'] = [Circle(col_green, (0, 0), 6), Line(col_green, (0, 0), (5, 0))] #, Poly(col_white, ((-5, 5), (-5, -5), (5, -5), (5, 5)))]
 shapes['chassis_two'] = [Line(col_green, (0, 0), (-2, -10)), Line(col_green, (-2, -10), (-8, -4)),
     Line(col_green, (-8, -4), (-4, 0)), Line(col_green, (-4, 0), (-8, 4)), Line(col_green, (-8, 4), (-2, 10)),
     Line(col_green, (-2, 10), (0, 0)),
