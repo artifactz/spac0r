@@ -313,12 +313,17 @@ class World:
         self.hostile2.position = [-50.0, -10.0]
         self.hostile2.pilot = pilots.AI_Pilot_Basic(self.hostile2, self)
 
+        self.hostile3 = Spacecraft(
+            [Part(Stats(hit_points_max = 1000, rotation_speed = 0.5, accerlation = 10, speed_max = 50), paint_shapes(get_shapes('chassis_mudda_one'), col_red), 0, 0, 0)])
+        self.hostile3.position = [10.0, 100.0]
+        self.hostile3.pilot = pilots.AI_Pilot_Basic(self.hostile3, self)
+
         # fast access lists
-        self.spacecrafts = [self.player, self.hostile, self.hostile2]
+        self.spacecrafts = [self.player, self.hostile, self.hostile2, self.hostile3]
         self.shots = []
         self.particles = []
-        self.mutable = [self.player, self.hostile, self.hostile2]
-        self.collidable = [self.player, self.hostile, self.hostile2]
+        self.mutable = [self.player, self.hostile, self.hostile2, self.hostile3]
+        self.collidable = [self.player, self.hostile, self.hostile2, self.hostile3]
         self.decayable = []
 
     def add_entity(self, entity):
@@ -413,6 +418,14 @@ shapes['chassis_two'] = [Line(col_green, (0, 0), (-2, -10)), Line(col_green, (-2
     Line(col_green, (2, 0), (0,  13)), Line(col_green, (0,  13), (6,  10)), Line(col_green, (6,  10), (2, 0)),
     Line(col_green, (5, -2), (8, -10)), Line(col_green, (8, -10), (17, -2)), Line(col_green, (17, -2), (5, -2)),
     Line(col_green, (5,  2), (8,  10)), Line(col_green, (8,  10), (17,  2)), Line(col_green, (17,  2), (5,  2))]
+shapes['chassis_mudda_one'] = [Circle(col_green, (0, 0), 8), Line(col_green, (0,  8), (7,  15)), Line(col_green, (7,  15), (14,  15)),
+    Line(col_green, (14,  15), (21, 8)), Line(col_green, (21, 8), (21, 12)), Line(col_green, (21, 12), (14, 18)),
+    Line(col_green, (14, 18), (7, 18)), Line(col_green, (7, 18), (-1, 11)), Line(col_green, (-1, 11), (-10, 11)), # end of 'grabber' right
+    Line(col_green, (0,  -8), (7,  -15)), Line(col_green, (7,  -15), (14,  -15)),
+    Line(col_green, (14,  -15), (21, -8)), Line(col_green, (21, -8), (21, -12)), Line(col_green, (21, -12), (14, -18)),
+    Line(col_green, (14, -18), (7, -18)), Line(col_green, (7, -18), (-1, -11)), Line(col_green, (-1, -11), (-10, -11)),  # end of 'grabber' left
+    Line(col_green, (-10, -11), (-10, 11)), # end of front half
+    Line(col_green, (-10, 11), (-12, 13)), Line(col_green, (-12, 13), (-12, -13)), Line(col_green, (-12, -13), (-10, -11))]
 
 def get_shapes(identifier):
     return copy.deepcopy(shapes[identifier])
